@@ -7,3 +7,9 @@ services:
     container_name: users_subgraph
     ports:
       - "4001:4001"
+    networks:
+      - ekoru-network
+
+networks:
+  ekoru-network:
+    driver: bridge

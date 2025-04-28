@@ -1,4 +1,3 @@
-import { AuthResolver } from "./auth";
 import { UserResolver } from "./users";
 
 export const resolvers = {
@@ -6,7 +5,6 @@ export const resolvers = {
     ...UserResolver.Query,
   },
   Mutation: {
-    ...AuthResolver.Mutation,
     ...UserResolver.Mutation,
   },
 };

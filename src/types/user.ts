@@ -4,6 +4,11 @@ export type User = {
   email: string;
   password: string;
   isCompany: boolean;
+  address: string;
+  county: string;
+  city: string;
+  region: string;
+  phone: string;
   createdAt: string;
   updatedAt: string;
 };

@@ -38,6 +38,7 @@ export const UserService = {
     return user;
   },
   getMe: async ({ token }: Context) => {
+    console.log("TOKEN:", token);
     const userId = TokenValidation(token as string) as string;
     if (!userId) {
       return new ErrorService.UnAuthorizedError("Token no valido");

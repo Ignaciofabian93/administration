@@ -10,14 +10,36 @@ export const typeDefs = gql`
     pointsThreshold: Int!
   }
 
+  type County {
+    id: ID!
+    county: String!
+  }
+
+  type City {
+    id: ID!
+    city: String!
+  }
+
+  type Region {
+    id: ID!
+    region: String!
+  }
+
+  type Country {
+    id: ID!
+    country: String!
+  }
+
   type User @key(fields: "id") {
     id: ID
     name: String
+    surnames: String
     email: String
     address: String
-    county: String
-    city: String
-    region: String
+    county: County
+    city: City
+    region: Region
+    country: Country
     phone: String
     isCompany: Boolean
     createdAt: String
@@ -26,6 +48,10 @@ export const typeDefs = gql`
   }
 
   extend type Query {
+    countries: [Country]
+    regions(id: ID!): [Region]
+    cities(id: ID!): [City]
+    counties(id: ID!): [County]
     users: [User]
     user(id: ID!): User
     me: User
@@ -33,27 +59,32 @@ export const typeDefs = gql`
 
   extend type Mutation {
     register(
-      id: ID!
       name: String!
+      surnames: String!
       email: String!
       address: String!
-      county: String!
-      city: String!
-      region: String!
+      countyId: Int!
+      cityId: Int!
+      regionId: Int!
+      countryId: Int!
       phone: String!
+      password: String!
       isCompany: Boolean!
     ): User
     updatePassword(password: String!, newPassword: String!): User
     updateProfile(
       id: ID!
-      name: String!
-      email: String!
-      address: String!
-      county: String!
-      city: String!
-      region: String!
-      phone: String!
-      isCompany: Boolean!
+      name: String
+      surnames: String
+      email: String
+      address: String
+      county: Int
+      city: Int
+      region: Int
+      country: Int
+      phone: String
+      password: String
+      isCompany: Boolean
     ): User
   }
 `;

@@ -5,6 +5,34 @@ import { PasswordUpdate, User } from "../../types/user";
 import { ErrorService } from "../../errors/errors";
 
 export const UserService = {
+  getCountries: async () => {
+    const countries = await prisma.country.findMany();
+    if (!countries) {
+      return new ErrorService.NotFoundError("Países no encontrados");
+    }
+    return countries;
+  },
+  getRegions: async ({ id }: { id: string }) => {
+    const regions = await prisma.region.findMany({ where: { countryId: Number(id) } });
+    if (!regions) {
+      return new ErrorService.NotFoundError("Regiones no encontradas");
+    }
+    return regions;
+  },
+  getCities: async ({ id }: { id: string }) => {
+    const cities = await prisma.city.findMany({ where: { regionId: Number(id) } });
+    if (!cities) {
+      return new ErrorService.NotFoundError("Ciudades no encontradas");
+    }
+    return cities;
+  },
+  getCounties: async ({ id }: { id: string }) => {
+    const counties = await prisma.county.findMany({ where: { cityId: Number(id) } });
+    if (!counties) {
+      return new ErrorService.NotFoundError("Comunas no encontrados");
+    }
+    return counties;
+  },
   getUserById: async (id: string) => {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
@@ -15,9 +43,25 @@ export const UserService = {
   getUsers: async ({ token }: Context) => {
     const userId = TokenValidation(token as string);
     if (!userId) {
-      return new ErrorService.UnAuthorizedError("Token no valido");
+      return new ErrorService.UnAuthorizedError("No autorizado");
     }
-    const users = await prisma.user.findMany({ include: { userCategory: true } });
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        address: true,
+        county: { select: { id: true, county: true } },
+        city: { select: { id: true, city: true } },
+        region: { select: { id: true, region: true } },
+        country: { select: { id: true, country: true } },
+        phone: true,
+        isCompany: true,
+        createdAt: true,
+        updatedAt: true,
+        userCategory: true,
+      },
+    });
     if (!users) {
       return new ErrorService.NotFoundError("Usuarios no encontrados");
     }
@@ -26,11 +70,25 @@ export const UserService = {
   getUser: async ({ id }: { id: string }, { token }: Context) => {
     const userId = TokenValidation(token as string);
     if (!userId) {
-      return new ErrorService.UnAuthorizedError("Token no valido");
+      return new ErrorService.UnAuthorizedError("No autorizado");
     }
     const user = await prisma.user.findUnique({
       where: { id },
-      include: { userCategory: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        address: true,
+        county: { select: { id: true, county: true } },
+        city: { select: { id: true, city: true } },
+        region: { select: { id: true, region: true } },
+        country: { select: { id: true, country: true } },
+        phone: true,
+        isCompany: true,
+        createdAt: true,
+        updatedAt: true,
+        userCategory: true,
+      },
     });
     if (!user) {
       return new ErrorService.NotFoundError("Usuario no encontrado");
@@ -41,7 +99,7 @@ export const UserService = {
     console.log("TOKEN:", token);
     const userId = TokenValidation(token as string) as string;
     if (!userId) {
-      return new ErrorService.UnAuthorizedError("Token no valido");
+      return new ErrorService.UnAuthorizedError("No autorizado");
     }
     console.log("ID::: ", userId);
 
@@ -52,9 +110,10 @@ export const UserService = {
         name: true,
         email: true,
         address: true,
-        county: true,
-        city: true,
-        region: true,
+        county: { select: { id: true, county: true } },
+        city: { select: { id: true, city: true } },
+        region: { select: { id: true, region: true } },
+        country: { select: { id: true, country: true } },
         phone: true,
         isCompany: true,
         createdAt: true,
@@ -67,32 +126,37 @@ export const UserService = {
     if (!user) {
       return new ErrorService.NotFoundError("Usuario no encontrado");
     }
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      address: user.address,
-      county: user.county,
-      city: user.city,
-      region: user.region,
-      phone: user.phone,
-      isCompany: user.isCompany,
-      createdAt: user.createdAt.toLocaleDateString(),
-      updatedAt: user.updatedAt.toLocaleDateString(),
-      userCategory: {
-        id: user.userCategory?.id,
-        name: user.userCategory?.name,
-        categoryDiscountAmount: user.userCategory?.categoryDiscountAmount,
-        pointsThreshold: user.userCategory?.pointsThreshold,
-      },
-    };
+    return user;
   },
-  register: async ({ name, email, password, isCompany, address, county, city, region, phone }: User) => {
-    if (!name || !email || !password || !address || !county || !city || !region || !phone) {
+  register: async ({
+    name,
+    surnames,
+    email,
+    password,
+    isCompany,
+    address,
+    countyId,
+    cityId,
+    regionId,
+    countryId,
+    phone,
+  }: Omit<User, "id">) => {
+    if (
+      !name ||
+      !surnames ||
+      !email ||
+      !password ||
+      !address ||
+      !countyId ||
+      !cityId ||
+      !regionId ||
+      !countryId ||
+      !phone
+    ) {
       return new ErrorService.BadRequestError("Faltan datos");
     }
     const user = await prisma.user.create({
-      data: { name, email, password, isCompany, address, county, city, region, phone },
+      data: { name, surnames, email, password, isCompany, address, countyId, cityId, regionId, countryId, phone },
     });
     if (!user) {
       return new ErrorService.InternalServerError("No se pudo crear el usuario");
@@ -100,20 +164,17 @@ export const UserService = {
     return user;
   },
   updateProfile: async (
-    { name, email, isCompany, phone, address, county, city, region }: User,
+    { name, surnames, email, isCompany, phone, address, countyId, cityId, regionId, countryId }: User,
     { req, token }: Context,
   ) => {
     const userId = TokenValidation(token as string);
     if (!userId) {
-      return new ErrorService.UnAuthorizedError("Token no valido");
-    }
-    if (!name || !email || !address || !county || !city || !region || !phone) {
-      return new ErrorService.BadRequestError("Faltan datos");
+      return new ErrorService.UnAuthorizedError("No autorizado");
     }
     const { id } = req.params;
     const user = await prisma.user.update({
       where: { id },
-      data: { name, email, isCompany, address, county, city, region, phone },
+      data: { name, surnames, email, isCompany, address, countyId, cityId, regionId, countryId, phone },
     });
     if (!user) {
       return new ErrorService.InternalServerError("No se pudo actualizar el usuario");
@@ -123,7 +184,7 @@ export const UserService = {
   updatePassword: async ({ password, newPassword }: PasswordUpdate, { req, token }: Context) => {
     const userId = TokenValidation(token as string);
     if (!userId) {
-      return new ErrorService.UnAuthorizedError("Token no valido");
+      return new ErrorService.UnAuthorizedError("No autorizado");
     }
     if (!password || !newPassword) {
       return new ErrorService.BadRequestError("Faltan datos");

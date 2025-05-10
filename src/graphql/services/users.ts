@@ -1,8 +1,9 @@
 import prisma from "../../client/prisma";
 import { type Context } from "../../types/context";
 import { TokenValidation } from "../../middleware/tokenValidation";
-import { PasswordUpdate, User } from "../../types/user";
+import { NewUser, PasswordUpdate, User } from "../../types/user";
 import { ErrorService } from "../../errors/errors";
+import { hash, genSalt } from "bcrypt";
 
 export const UserService = {
   getCountries: async () => {
@@ -128,35 +129,16 @@ export const UserService = {
     }
     return user;
   },
-  register: async ({
-    name,
-    surnames,
-    email,
-    password,
-    isCompany,
-    address,
-    countyId,
-    cityId,
-    regionId,
-    countryId,
-    phone,
-  }: Omit<User, "id">) => {
-    if (
-      !name ||
-      !surnames ||
-      !email ||
-      !password ||
-      !address ||
-      !countyId ||
-      !cityId ||
-      !regionId ||
-      !countryId ||
-      !phone
-    ) {
+  register: async ({ name, surnames, email, password, isCompany }: NewUser) => {
+    if (!name || !surnames || !email || !password) {
       return new ErrorService.BadRequestError("Faltan datos");
     }
+    console.log("PASS:: ", password);
+
+    const salt = await genSalt(10);
+    const hashedPassword = await hash(password, salt);
     const user = await prisma.user.create({
-      data: { name, surnames, email, password, isCompany, address, countyId, cityId, regionId, countryId, phone },
+      data: { name, surnames, email, password: hashedPassword, isCompany },
     });
     if (!user) {
       return new ErrorService.InternalServerError("No se pudo crear el usuario");

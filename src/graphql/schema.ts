@@ -62,12 +62,12 @@ export const typeDefs = gql`
       name: String!
       surnames: String!
       email: String!
-      address: String!
-      countyId: Int!
-      cityId: Int!
-      regionId: Int!
-      countryId: Int!
-      phone: String!
+      address: String
+      countyId: Int
+      cityId: Int
+      regionId: Int
+      countryId: Int
+      phone: String
       password: String!
       isCompany: Boolean!
     ): User

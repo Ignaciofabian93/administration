@@ -1,6 +1,6 @@
 import { UserService } from "../services/users";
 import { type Context } from "../../types/context";
-import { type PasswordUpdate, type User } from "../../types/user";
+import { type NewUser, type PasswordUpdate, type User } from "../../types/user";
 
 export const UserResolver = {
   Query: {
@@ -16,7 +16,7 @@ export const UserResolver = {
     updateProfile: (_parent: unknown, _args: User, context: Context) => UserService.updateProfile(_args, context),
     updatePassword: (_parent: unknown, _args: PasswordUpdate, context: Context) =>
       UserService.updatePassword(_args, context),
-    register: (_parent: unknown, _args: Omit<User, "id">) => UserService.register(_args),
+    register: (_parent: unknown, _args: NewUser) => UserService.register(_args),
   },
   User: {
     __resolveReference: async (reference: { id: string }) => {

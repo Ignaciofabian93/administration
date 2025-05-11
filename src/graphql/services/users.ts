@@ -97,18 +97,16 @@ export const UserService = {
     return user;
   },
   getMe: async ({ token }: Context) => {
-    console.log("TOKEN:", token);
     const userId = TokenValidation(token as string) as string;
     if (!userId) {
       return new ErrorService.UnAuthorizedError("No autorizado");
     }
-    console.log("ID::: ", userId);
-
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         name: true,
+        surnames: true,
         email: true,
         address: true,
         county: { select: { id: true, county: true } },
@@ -122,7 +120,6 @@ export const UserService = {
         userCategory: true,
       },
     });
-    console.log("USER:: ", user);
 
     if (!user) {
       return new ErrorService.NotFoundError("Usuario no encontrado");
@@ -133,12 +130,11 @@ export const UserService = {
     if (!name || !surnames || !email || !password) {
       return new ErrorService.BadRequestError("Faltan datos");
     }
-    console.log("PASS:: ", password);
-
-    const salt = await genSalt(10);
+    const formattedEmail = email.toLowerCase();
+    const salt = await genSalt();
     const hashedPassword = await hash(password, salt);
     const user = await prisma.user.create({
-      data: { name, surnames, email, password: hashedPassword, isCompany },
+      data: { name, surnames, email: formattedEmail, password: hashedPassword, isCompany },
     });
     if (!user) {
       return new ErrorService.InternalServerError("No se pudo crear el usuario");

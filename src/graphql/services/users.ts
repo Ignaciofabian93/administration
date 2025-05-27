@@ -50,6 +50,10 @@ export const UserService = {
       select: {
         id: true,
         name: true,
+        surnames: true,
+        businessName: true,
+        profileImage: true,
+        birthday: true,
         email: true,
         address: true,
         county: { select: { id: true, county: true } },
@@ -78,6 +82,10 @@ export const UserService = {
       select: {
         id: true,
         name: true,
+        surnames: true,
+        businessName: true,
+        profileImage: true,
+        birthday: true,
         email: true,
         address: true,
         county: { select: { id: true, county: true } },
@@ -107,6 +115,9 @@ export const UserService = {
         id: true,
         name: true,
         surnames: true,
+        businessName: true,
+        profileImage: true,
+        birthday: true,
         email: true,
         address: true,
         county: { select: { id: true, county: true } },
@@ -126,7 +137,7 @@ export const UserService = {
     }
     return user;
   },
-  register: async ({ name, surnames, email, password, isCompany }: NewUser) => {
+  register: async ({ name, surnames, businessName, email, password, isCompany }: NewUser) => {
     if (!name || !surnames || !email || !password) {
       return new ErrorService.BadRequestError("Faltan datos");
     }
@@ -134,7 +145,7 @@ export const UserService = {
     const salt = await genSalt();
     const hashedPassword = await hash(password, salt);
     const user = await prisma.user.create({
-      data: { name, surnames, email: formattedEmail, password: hashedPassword, isCompany },
+      data: { name, surnames, businessName, email: formattedEmail, password: hashedPassword, isCompany },
     });
     if (!user) {
       return new ErrorService.InternalServerError("No se pudo crear el usuario");
@@ -142,7 +153,21 @@ export const UserService = {
     return user;
   },
   updateProfile: async (
-    { name, surnames, email, isCompany, phone, address, countyId, cityId, regionId, countryId }: User,
+    {
+      name,
+      surnames,
+      businessName,
+      profileImage,
+      birthday,
+      email,
+      isCompany,
+      phone,
+      address,
+      countyId,
+      cityId,
+      regionId,
+      countryId,
+    }: User,
     { req, token }: Context,
   ) => {
     const userId = TokenValidation(token as string);
@@ -152,7 +177,21 @@ export const UserService = {
     const { id } = req.params;
     const user = await prisma.user.update({
       where: { id },
-      data: { name, surnames, email, isCompany, address, countyId, cityId, regionId, countryId, phone },
+      data: {
+        name,
+        surnames,
+        businessName,
+        birthday,
+        email,
+        isCompany,
+        address,
+        countyId,
+        cityId,
+        regionId,
+        countryId,
+        phone,
+        profileImage,
+      },
     });
     if (!user) {
       return new ErrorService.InternalServerError("No se pudo actualizar el usuario");

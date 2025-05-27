@@ -1,6 +1,9 @@
 export type NewUser = {
   name: string;
   surnames: string;
+  businessName: string;
+  profileImage?: string;
+  birthday: string;
   email: string;
   password: string;
   isCompany: boolean;
@@ -12,7 +15,10 @@ export type User = {
   id: string;
   name: string;
   surnames: string;
+  businessName: string;
   email: string;
+  profileImage?: string;
+  birthday: string;
   password: string;
   isCompany: boolean;
   address: string;

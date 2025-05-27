@@ -26,6 +26,8 @@ app.use(
     context: async ({ req, res }) => {
       const auth = req.headers.authorization;
       const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : undefined;
+      console.log("TOKEN:: ", token);
+
       return { req, res, token };
     },
   }),

@@ -20,14 +20,13 @@ const app = express();
 
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+
 app.use(
   "/graphql",
   expressMiddleware(server, {
     context: async ({ req, res }) => {
       const auth = req.headers.authorization;
       const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : undefined;
-      console.log("TOKEN:: ", token);
-
       return { req, res, token };
     },
   }),

@@ -35,6 +35,9 @@ export const typeDefs = gql`
     name: String
     surnames: String
     email: String
+    profileImage: String
+    birthday: String
+    businessName: String
     address: String
     county: County
     city: City
@@ -77,14 +80,15 @@ export const typeDefs = gql`
       name: String
       surnames: String
       email: String
+      profileImage: String
+      birthday: String
+      businessName: String
       address: String
-      county: Int
-      city: Int
-      region: Int
-      country: Int
+      countyId: Int
+      cityId: Int
+      regionId: Int
+      countryId: Int
       phone: String
-      password: String
-      isCompany: Boolean
     ): User
   }
 `;

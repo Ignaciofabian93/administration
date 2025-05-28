@@ -154,13 +154,13 @@ export const UserService = {
   },
   updateProfile: async (
     {
+      id,
       name,
       surnames,
       businessName,
       profileImage,
       birthday,
       email,
-      isCompany,
       phone,
       address,
       countyId,
@@ -168,13 +168,13 @@ export const UserService = {
       regionId,
       countryId,
     }: User,
-    { req, token }: Context,
+    { token }: Context,
   ) => {
     const userId = TokenValidation(token as string);
     if (!userId) {
       return new ErrorService.UnAuthorizedError("No autorizado");
     }
-    const { id } = req.params;
+
     const user = await prisma.user.update({
       where: { id },
       data: {
@@ -183,7 +183,6 @@ export const UserService = {
         businessName,
         birthday,
         email,
-        isCompany,
         address,
         countyId,
         cityId,

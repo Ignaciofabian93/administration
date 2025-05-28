@@ -191,10 +191,30 @@ export const UserService = {
         phone,
         profileImage,
       },
+      select: {
+        id: true,
+        name: true,
+        surnames: true,
+        businessName: true,
+        birthday: true,
+        email: true,
+        address: true,
+        county: { select: { id: true, county: true } },
+        city: { select: { id: true, city: true } },
+        region: { select: { id: true, region: true } },
+        country: { select: { id: true, country: true } },
+        phone: true,
+        profileImage: true,
+        createdAt: true,
+        updatedAt: true,
+        userCategory: true,
+      },
     });
     if (!user) {
       return new ErrorService.InternalServerError("No se pudo actualizar el usuario");
     }
+    console.log("USER:: ", user);
+
     return user;
   },
   updatePassword: async ({ password, newPassword }: PasswordUpdate, { req, token }: Context) => {

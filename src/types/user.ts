@@ -34,4 +34,5 @@ export type User = {
 export type PasswordUpdate = {
   password: string;
   newPassword: string;
+  id: string;
 };

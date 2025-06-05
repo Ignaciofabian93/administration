@@ -1,6 +1,4 @@
 import prisma from "../../client/prisma";
-import { type Context } from "../../types/context";
-import { TokenValidation } from "../../middleware/tokenValidation";
 import { NewUser, PasswordUpdate, User } from "../../types/user";
 import { ErrorService } from "../../errors/errors";
 import { hash, genSalt } from "bcrypt";
@@ -34,18 +32,14 @@ export const UserService = {
     }
     return counties;
   },
-  getUserById: async (id: string) => {
+  getUserById: async ({ id }: { id: string }) => {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
       return new ErrorService.NotFoundError("Usuario no encontrado");
     }
     return user;
   },
-  getUsers: async ({ token }: Context) => {
-    const userId = TokenValidation(token as string);
-    if (!userId) {
-      return new ErrorService.UnAuthorizedError("No autorizado");
-    }
+  getUsers: async () => {
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -72,11 +66,7 @@ export const UserService = {
     }
     return users;
   },
-  getUser: async ({ id }: { id: string }, { token }: Context) => {
-    const userId = TokenValidation(token as string);
-    if (!userId) {
-      return new ErrorService.UnAuthorizedError("No autorizado");
-    }
+  getUser: async ({ id }: { id: string }) => {
     const user = await prisma.user.findUnique({
       where: { id },
       select: {
@@ -104,13 +94,9 @@ export const UserService = {
     }
     return user;
   },
-  getMe: async ({ token }: Context) => {
-    const userId = TokenValidation(token as string) as string;
-    if (!userId) {
-      return new ErrorService.UnAuthorizedError("No autorizado");
-    }
+  getMe: async ({ id }: { id: string }) => {
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -152,29 +138,21 @@ export const UserService = {
     }
     return user;
   },
-  updateProfile: async (
-    {
-      id,
-      name,
-      surnames,
-      businessName,
-      profileImage,
-      birthday,
-      email,
-      phone,
-      address,
-      countyId,
-      cityId,
-      regionId,
-      countryId,
-    }: User,
-    { token }: Context,
-  ) => {
-    const userId = TokenValidation(token as string);
-    if (!userId) {
-      return new ErrorService.UnAuthorizedError("No autorizado");
-    }
-
+  updateProfile: async ({
+    id,
+    name,
+    surnames,
+    businessName,
+    profileImage,
+    birthday,
+    email,
+    phone,
+    address,
+    countyId,
+    cityId,
+    regionId,
+    countryId,
+  }: User) => {
     const user = await prisma.user.update({
       where: { id },
       data: {
@@ -213,19 +191,12 @@ export const UserService = {
     if (!user) {
       return new ErrorService.InternalServerError("No se pudo actualizar el usuario");
     }
-    console.log("USER:: ", user);
-
     return user;
   },
-  updatePassword: async ({ password, newPassword }: PasswordUpdate, { req, token }: Context) => {
-    const userId = TokenValidation(token as string);
-    if (!userId) {
-      return new ErrorService.UnAuthorizedError("No autorizado");
-    }
+  updatePassword: async ({ password, newPassword, id }: PasswordUpdate) => {
     if (!password || !newPassword) {
       return new ErrorService.BadRequestError("Faltan datos");
     }
-    const { id } = req.params;
     const user = await prisma.user.findUnique({
       where: { id },
     });

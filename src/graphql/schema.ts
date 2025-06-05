@@ -31,8 +31,8 @@ export const typeDefs = gql`
   }
 
   type User @key(fields: "id") {
-    id: ID
-    name: String
+    id: ID!
+    name: String!
     surnames: String
     email: String
     profileImage: String
@@ -57,7 +57,7 @@ export const typeDefs = gql`
     counties(id: ID!): [County]
     users: [User]
     user(id: ID!): User
-    me: User
+    me(id: ID!): User
   }
 
   extend type Mutation {

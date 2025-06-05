@@ -7,4 +7,7 @@ export const resolvers = {
   Mutation: {
     ...UserResolver.Mutation,
   },
+  User: {
+    __resolveReference: UserResolver.User.__resolveReference,
+  },
 };

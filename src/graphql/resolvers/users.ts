@@ -9,7 +9,7 @@ export const UserResolver = {
     counties: (_parent: unknown, _args: { id: string }) => UserService.getCounties(_args),
     users: (_parent: unknown, _args: unknown) => UserService.getUsers(),
     user: (_parent: unknown, _args: { id: string }) => UserService.getUser(_args),
-    me: (_parent: unknown, _args: { id: string }) => UserService.getMe(_args),
+    me: (_parent: unknown, _args: unknown, context: { id: string }) => UserService.getMe(context),
   },
   Mutation: {
     updateProfile: (_parent: unknown, _args: User) => UserService.updateProfile(_args),

@@ -4,6 +4,7 @@ import { buildSubgraphSchema } from "@apollo/subgraph";
 import { expressMiddleware } from "@apollo/server/express4";
 import { typeDefs } from "./graphql/schema";
 import { resolvers } from "./graphql/resolvers";
+import { decodedToken } from "./middleware/auth";
 
 const server = new ApolloServer({
   schema: buildSubgraphSchema([
@@ -27,7 +28,13 @@ app.use(
     context: async ({ req, res }) => {
       const auth = req.headers.authorization;
       const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : undefined;
-      return { req, res, token };
+
+      let userId: string | undefined;
+      if (token) {
+        userId = decodedToken(token)?.id;
+      }
+
+      return { req, res, token, id: userId };
     },
   }),
 );

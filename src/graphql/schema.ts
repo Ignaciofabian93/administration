@@ -3,6 +3,18 @@ import gql from "graphql-tag";
 export const typeDefs = gql`
   extend schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"])
 
+  enum AccountType {
+    FREE
+    PLUS
+    PREMIUM
+  }
+
+  enum PreferredContactMethod {
+    EMAIL
+    WHATSAPP
+    ALL
+  }
+
   type UserCategory {
     id: ID!
     name: String!
@@ -35,16 +47,19 @@ export const typeDefs = gql`
     name: String!
     surnames: String
     email: String
+    businessName: String
     profileImage: String
     birthday: String
-    businessName: String
+    phone: String
     address: String
+    isCompany: Boolean
+    accountType: AccountType
+    preferredContactMethod: PreferredContactMethod
+    points: Int
     county: County
     city: City
     region: Region
     country: Country
-    phone: String
-    isCompany: Boolean
     createdAt: String
     updatedAt: String
     userCategory: UserCategory
@@ -57,7 +72,7 @@ export const typeDefs = gql`
     counties(id: ID!): [County]
     users: [User]
     user(id: ID!): User
-    me(id: ID!): User
+    me: User
   }
 
   extend type Mutation {
@@ -81,6 +96,9 @@ export const typeDefs = gql`
       surnames: String
       email: String
       profileImage: String
+      accountType: AccountType
+      preferredContactMethod: PreferredContactMethod
+      points: Int
       birthday: String
       businessName: String
       address: String

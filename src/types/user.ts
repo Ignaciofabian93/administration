@@ -20,6 +20,9 @@ export type User = {
   profileImage?: string;
   birthday: string;
   password: string;
+  accountType: "FREE" | "PLUS" | "PREMIUM";
+  preferredContactMethod: "EMAIL" | "WHATSAPP" | "ALL";
+  points: number;
   isCompany: boolean;
   address: string;
   countyId: number;

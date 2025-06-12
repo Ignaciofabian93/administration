@@ -1,41 +1,41 @@
-export type NewUser = {
-  name: string;
-  surnames: string;
-  businessName: string;
-  profileImage?: string;
-  birthday: string;
-  email: string;
-  password: string;
-  isCompany: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+import { type AccountType, type ContactMethod } from "./enums";
 
 export type User = {
   id: string;
-  name: string;
-  surnames: string;
-  businessName: string;
+  name?: string | null;
+  surnames?: string | null;
   email: string;
-  profileImage?: string;
-  birthday: string;
+  businessName?: string | null;
   password: string;
-  accountType: "FREE" | "PLUS" | "PREMIUM";
-  preferredContactMethod: "EMAIL" | "WHATSAPP" | "ALL";
-  points: number;
-  isCompany: boolean;
+  profileImage?: string | null;
+  birthday: string;
+  phone: string;
   address: string;
+  isCompany: boolean;
+  accountType: AccountType;
+  preferredContactMethod: ContactMethod;
+  points: number;
+  createdAt: Date;
+  updatedAt: Date;
+  regionId: number;
   countyId: number;
   cityId: number;
-  regionId: number;
   countryId: number;
-  phone: string;
-  createdAt: string;
-  updatedAt: string;
+  userCategoryId?: number | null;
 };
 
-export type PasswordUpdate = {
-  password: string;
-  newPassword: string;
+export type UserCategory = {
+  id: number;
+  name: string;
+  level: number;
+  categoryDiscountAmount: number;
+  pointsThreshold: number;
+};
+
+export type Session = {
   id: string;
+  userId: string;
+  token: string;
+  createdAt: string;
+  expiresAt: string;
 };

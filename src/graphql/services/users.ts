@@ -1,46 +1,128 @@
 import prisma from "../../client/prisma";
-import { NewUser, PasswordUpdate, User } from "../../types/user";
 import { ErrorService } from "../../errors/errors";
 import { hash, genSalt } from "bcrypt";
+import { type User } from "../../types/user";
+import { type City, type County, type Region, type Country } from "../../types/location";
 
 export const UserService = {
   getCountries: async () => {
-    const countries = await prisma.country.findMany();
+    const countries: Country[] = await prisma.country.findMany({
+      select: {
+        id: true,
+        country: true,
+      },
+      orderBy: {
+        country: "asc",
+      },
+    });
     if (!countries) {
       return new ErrorService.NotFoundError("Países no encontrados");
     }
     return countries;
   },
   getRegions: async ({ id }: { id: string }) => {
-    const regions = await prisma.region.findMany({ where: { countryId: Number(id) } });
+    if (!id) {
+      return new ErrorService.BadRequestError("ID de país es requerido");
+    }
+
+    const parsedId = Number(id);
+
+    const regions: Region[] = await prisma.region.findMany({
+      select: {
+        id: true,
+        region: true,
+      },
+      where: { countryId: parsedId },
+      orderBy: {
+        region: "asc",
+      },
+    });
+
     if (!regions) {
       return new ErrorService.NotFoundError("Regiones no encontradas");
     }
+
     return regions;
   },
   getCities: async ({ id }: { id: string }) => {
-    const cities = await prisma.city.findMany({ where: { regionId: Number(id) } });
+    if (!id) {
+      return new ErrorService.BadRequestError("ID de región es requerido");
+    }
+
+    const parsedId = Number(id);
+
+    const cities: City[] = await prisma.city.findMany({
+      select: { id: true, city: true },
+      where: { regionId: parsedId },
+      orderBy: {
+        city: "asc",
+      },
+    });
+
     if (!cities) {
       return new ErrorService.NotFoundError("Ciudades no encontradas");
     }
+
     return cities;
   },
   getCounties: async ({ id }: { id: string }) => {
-    const counties = await prisma.county.findMany({ where: { cityId: Number(id) } });
+    if (!id) {
+      return new ErrorService.BadRequestError("ID de ciudad es requerido");
+    }
+
+    const parsedId = Number(id);
+
+    const counties: County[] = await prisma.county.findMany({
+      select: { id: true, county: true },
+      where: { cityId: parsedId },
+      orderBy: {
+        county: "asc",
+      },
+    });
+
     if (!counties) {
       return new ErrorService.NotFoundError("Comunas no encontrados");
     }
+
     return counties;
   },
   getUserById: async ({ id }: { id: string }) => {
-    const user = await prisma.user.findUnique({ where: { id } });
+    if (!id) {
+      return new ErrorService.BadRequestError("ID de usuario es requerido");
+    }
+
+    const user: Partial<User> | null = await prisma.user.findUnique({
+      select: {
+        id: true,
+        name: true,
+        surnames: true,
+        businessName: true,
+        profileImage: true,
+        birthday: true,
+        email: true,
+        address: true,
+        county: { select: { id: true, county: true } },
+        city: { select: { id: true, city: true } },
+        region: { select: { id: true, region: true } },
+        country: { select: { id: true, country: true } },
+        phone: true,
+        isCompany: true,
+        createdAt: true,
+        updatedAt: true,
+        userCategory: true,
+        accountType: true,
+        preferredContactMethod: true,
+        points: true,
+      },
+      where: { id },
+    });
     if (!user) {
       return new ErrorService.NotFoundError("Usuario no encontrado");
     }
     return user;
   },
   getUsers: async () => {
-    const users = await prisma.user.findMany({
+    const users: Partial<User>[] = await prisma.user.findMany({
       select: {
         id: true,
         name: true,
@@ -59,53 +141,33 @@ export const UserService = {
         createdAt: true,
         updatedAt: true,
         userCategory: true,
-      },
-    });
-    if (!users) {
-      return new ErrorService.NotFoundError("Usuarios no encontrados");
-    }
-    return users;
-  },
-  getUser: async ({ id }: { id: string }) => {
-    const user = await prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        surnames: true,
-        businessName: true,
-        profileImage: true,
-        birthday: true,
-        email: true,
-        address: true,
-        county: { select: { id: true, county: true } },
-        city: { select: { id: true, city: true } },
-        region: { select: { id: true, region: true } },
-        country: { select: { id: true, country: true } },
-        phone: true,
-        isCompany: true,
-        createdAt: true,
-        updatedAt: true,
-        userCategory: true,
-      },
-    });
-    if (!user) {
-      return new ErrorService.NotFoundError("Usuario no encontrado");
-    }
-    return user;
-  },
-  getMe: async ({ id }: { id: string }) => {
-    const user = await prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        surnames: true,
-        businessName: true,
-        profileImage: true,
         accountType: true,
         preferredContactMethod: true,
         points: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    if (!users) {
+      return new ErrorService.NotFoundError("Usuarios no encontrados");
+    }
+
+    return users;
+  },
+  getUser: async ({ id }: { id: string }) => {
+    if (!id) {
+      return new ErrorService.BadRequestError("ID de usuario es requerido");
+    }
+
+    const user: Partial<User> | null = await prisma.user.findUnique({
+      select: {
+        id: true,
+        name: true,
+        surnames: true,
+        businessName: true,
+        profileImage: true,
         birthday: true,
         email: true,
         address: true,
@@ -118,27 +180,87 @@ export const UserService = {
         createdAt: true,
         updatedAt: true,
         userCategory: true,
+        accountType: true,
+        preferredContactMethod: true,
+        points: true,
       },
+      where: { id },
     });
 
     if (!user) {
       return new ErrorService.NotFoundError("Usuario no encontrado");
     }
+
     return user;
   },
-  register: async ({ name, surnames, businessName, email, password, isCompany }: NewUser) => {
-    if (!name || !surnames || !email || !password) {
+  getMe: async ({ id }: { id: string }) => {
+    if (!id) {
+      return new ErrorService.BadRequestError("ID de usuario es requerido");
+    }
+
+    const user: Partial<User> | null = await prisma.user.findUnique({
+      select: {
+        id: true,
+        name: true,
+        surnames: true,
+        businessName: true,
+        profileImage: true,
+        birthday: true,
+        email: true,
+        address: true,
+        county: { select: { id: true, county: true } },
+        city: { select: { id: true, city: true } },
+        region: { select: { id: true, region: true } },
+        country: { select: { id: true, country: true } },
+        phone: true,
+        isCompany: true,
+        createdAt: true,
+        updatedAt: true,
+        userCategory: true,
+        accountType: true,
+        preferredContactMethod: true,
+        points: true,
+      },
+      where: { id },
+    });
+
+    if (!user) {
+      return new ErrorService.NotFoundError("Usuario no encontrado");
+    }
+
+    return user;
+  },
+  register: async ({ name, surnames, businessName, email, password, isCompany }: Partial<User>) => {
+    if ((!isCompany && !name) || (!isCompany && !surnames) || !email || !password || (isCompany && !businessName)) {
       return new ErrorService.BadRequestError("Faltan datos");
     }
+
     const formattedEmail = email.toLowerCase();
     const salt = await genSalt();
     const hashedPassword = await hash(password, salt);
-    const user = await prisma.user.create({
-      data: { name, surnames, businessName, email: formattedEmail, password: hashedPassword, isCompany },
+
+    const user: Partial<User> = await prisma.user.create({
+      data: {
+        name,
+        surnames,
+        businessName,
+        email: formattedEmail,
+        password: hashedPassword,
+        isCompany,
+        countyId: 268, // Default county ID
+        cityId: 40, // Default city ID
+        regionId: 13, // Default region ID
+        countryId: 1, // Default country ID
+        userCategoryId: 1, // Default user category ID
+        accountType: "FREE", // Default account type
+        preferredContactMethod: "ALL", // Default contact method
+      },
     });
+
     if (!user) {
       return new ErrorService.InternalServerError("No se pudo crear el usuario");
     }
+
     return user;
   },
   updateProfile: async ({
@@ -159,8 +281,7 @@ export const UserService = {
     preferredContactMethod,
     points,
   }: User) => {
-    const user = await prisma.user.update({
-      where: { id },
+    const user: Partial<User> = await prisma.user.update({
       data: {
         name,
         surnames,
@@ -183,10 +304,8 @@ export const UserService = {
         name: true,
         surnames: true,
         businessName: true,
+        profileImage: true,
         birthday: true,
-        accountType: true,
-        preferredContactMethod: true,
-        points: true,
         email: true,
         address: true,
         county: { select: { id: true, county: true } },
@@ -194,22 +313,28 @@ export const UserService = {
         region: { select: { id: true, region: true } },
         country: { select: { id: true, country: true } },
         phone: true,
-        profileImage: true,
+        isCompany: true,
         createdAt: true,
         updatedAt: true,
         userCategory: true,
+        accountType: true,
+        preferredContactMethod: true,
+        points: true,
       },
+      where: { id },
     });
+
     if (!user) {
       return new ErrorService.InternalServerError("No se pudo actualizar el usuario");
     }
+
     return user;
   },
-  updatePassword: async ({ password, newPassword, id }: PasswordUpdate) => {
+  updatePassword: async ({ password, newPassword, id }: { password: string; newPassword: string; id: string }) => {
     if (!password || !newPassword) {
       return new ErrorService.BadRequestError("Faltan datos");
     }
-    const user = await prisma.user.findUnique({
+    const user: Partial<User> | null = await prisma.user.findUnique({
       where: { id },
     });
     if (!user) {

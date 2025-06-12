@@ -1,5 +1,5 @@
 import { UserService } from "../services/users";
-import { type NewUser, type PasswordUpdate, type User } from "../../types/user";
+import { type User } from "../../types/user";
 
 export const UserResolver = {
   Query: {
@@ -13,8 +13,9 @@ export const UserResolver = {
   },
   Mutation: {
     updateProfile: (_parent: unknown, _args: User) => UserService.updateProfile(_args),
-    updatePassword: (_parent: unknown, _args: PasswordUpdate) => UserService.updatePassword(_args),
-    register: (_parent: unknown, _args: NewUser) => UserService.register(_args),
+    updatePassword: (_parent: unknown, _args: { password: string; newPassword: string; id: string }) =>
+      UserService.updatePassword(_args),
+    register: (_parent: unknown, _args: Partial<User>) => UserService.register(_args),
   },
   User: {
     __resolveReference: (reference: { id: string }) => UserService.getUserById(reference),

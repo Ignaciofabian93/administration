@@ -42,6 +42,8 @@ export const typeDefs = gql`
     country: String!
   }
 
+  scalar DateTime
+
   type User @key(fields: "id") {
     id: ID!
     name: String!
@@ -60,8 +62,8 @@ export const typeDefs = gql`
     city: City
     region: Region
     country: Country
-    createdAt: String
-    updatedAt: String
+    createdAt: DateTime!
+    updatedAt: DateTime!
     userCategory: UserCategory
   }
 
@@ -79,6 +81,7 @@ export const typeDefs = gql`
     register(
       name: String!
       surnames: String!
+      businessName: String
       email: String!
       address: String
       countyId: Int

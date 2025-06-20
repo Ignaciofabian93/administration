@@ -261,6 +261,8 @@ export const UserService = {
       return new ErrorService.InternalServerError("No se pudo crear el usuario");
     }
 
+    console.log("Usuario creado:", user);
+
     return user;
   },
   updateProfile: async ({

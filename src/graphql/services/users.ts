@@ -231,39 +231,45 @@ export const UserService = {
     return user;
   },
   register: async ({ name, surnames, businessName, email, password, isCompany }: Partial<User>) => {
-    if ((!isCompany && !name) || (!isCompany && !surnames) || !email || !password || (isCompany && !businessName)) {
-      return new ErrorService.BadRequestError("Faltan datos");
+    console.log("data", { name, surnames, businessName, email, password, isCompany });
+    try {
+      if ((!isCompany && !name) || (!isCompany && !surnames) || !email || !password || (isCompany && !businessName)) {
+        return new ErrorService.BadRequestError("Faltan datos");
+      }
+
+      const formattedEmail = email.toLowerCase();
+      const salt = await genSalt();
+      const hashedPassword = await hash(password, salt);
+
+      const user: Partial<User> = await prisma.user.create({
+        data: {
+          name,
+          surnames,
+          businessName: businessName ?? null,
+          email: formattedEmail,
+          password: hashedPassword,
+          isCompany,
+          countyId: 268, // Default county ID
+          cityId: 40, // Default city ID
+          regionId: 13, // Default region ID
+          countryId: 1, // Default country ID
+          userCategoryId: 1, // Default user category ID
+          accountType: "FREE", // Default account type
+          preferredContactMethod: "ALL", // Default contact method
+        },
+      });
+
+      if (!user) {
+        return new ErrorService.InternalServerError("No se pudo crear el usuario");
+      }
+
+      console.log("Usuario creado:", user);
+
+      return user;
+    } catch (error) {
+      console.error("Error al registrar usuario:", error);
+      return new ErrorService.InternalServerError("Error al registrar usuario");
     }
-
-    const formattedEmail = email.toLowerCase();
-    const salt = await genSalt();
-    const hashedPassword = await hash(password, salt);
-
-    const user: Partial<User> = await prisma.user.create({
-      data: {
-        name,
-        surnames,
-        businessName,
-        email: formattedEmail,
-        password: hashedPassword,
-        isCompany,
-        countyId: 268, // Default county ID
-        cityId: 40, // Default city ID
-        regionId: 13, // Default region ID
-        countryId: 1, // Default country ID
-        userCategoryId: 1, // Default user category ID
-        accountType: "FREE", // Default account type
-        preferredContactMethod: "ALL", // Default contact method
-      },
-    });
-
-    if (!user) {
-      return new ErrorService.InternalServerError("No se pudo crear el usuario");
-    }
-
-    console.log("Usuario creado:", user);
-
-    return user;
   },
   updateProfile: async ({
     id,

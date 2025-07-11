@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     container_name: users_subgraph_qa
+    image: users_subgraph_qa
     ports:
       - "4101:4001"
     env_file:

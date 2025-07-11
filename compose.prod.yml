@@ -2,7 +2,7 @@ services:
   users:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     restart: always
     container_name: users_subgraph_prod
     image: users_subgraph_prod

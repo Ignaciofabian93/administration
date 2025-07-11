@@ -2,7 +2,7 @@ services:
   users:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.qa
     restart: always
     container_name: users_subgraph_qa
     image: users_subgraph_qa

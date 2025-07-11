@@ -3,6 +3,7 @@ import { ErrorService } from "../../errors/errors";
 import { hash, genSalt } from "bcrypt";
 import { type User } from "../../types/user";
 import { type City, type County, type Region, type Country } from "../../types/location";
+import { sendWelcomeEmail } from "../../mail/register";
 
 export const UserService = {
   getCountries: async () => {
@@ -301,6 +302,8 @@ export const UserService = {
       if (!user) {
         return new ErrorService.InternalServerError("No se pudo crear el usuario");
       }
+
+      await sendWelcomeEmail(formattedEmail, user.name as string);
 
       return user;
     } catch (error) {

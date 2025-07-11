@@ -6,232 +6,271 @@ import { type City, type County, type Region, type Country } from "../../types/l
 
 export const UserService = {
   getCountries: async () => {
-    const countries: Country[] = await prisma.country.findMany({
-      select: {
-        id: true,
-        country: true,
-      },
-      orderBy: {
-        country: "asc",
-      },
-    });
-    if (!countries) {
-      return new ErrorService.NotFoundError("Países no encontrados");
+    try {
+      const countries: Country[] = await prisma.country.findMany({
+        select: {
+          id: true,
+          country: true,
+        },
+        orderBy: {
+          country: "asc",
+        },
+      });
+      if (!countries) {
+        return new ErrorService.NotFoundError("Países no encontrados");
+      }
+      return countries;
+    } catch (error) {
+      console.error("Error al obtener países:", error);
+      return new ErrorService.InternalServerError("Error al obtener países");
     }
-    return countries;
   },
   getRegions: async ({ id }: { id: string }) => {
-    if (!id) {
-      return new ErrorService.BadRequestError("ID de país es requerido");
+    try {
+      if (!id) {
+        return new ErrorService.BadRequestError("ID de país es requerido");
+      }
+
+      const parsedId = Number(id);
+
+      const regions: Region[] = await prisma.region.findMany({
+        select: {
+          id: true,
+          region: true,
+        },
+        where: { countryId: parsedId },
+        orderBy: {
+          region: "asc",
+        },
+      });
+
+      if (!regions) {
+        return new ErrorService.NotFoundError("Regiones no encontradas");
+      }
+
+      return regions;
+    } catch (error) {
+      console.error("Error al obtener regiones:", error);
+      return new ErrorService.InternalServerError("Error al obtener regiones");
     }
-
-    const parsedId = Number(id);
-
-    const regions: Region[] = await prisma.region.findMany({
-      select: {
-        id: true,
-        region: true,
-      },
-      where: { countryId: parsedId },
-      orderBy: {
-        region: "asc",
-      },
-    });
-
-    if (!regions) {
-      return new ErrorService.NotFoundError("Regiones no encontradas");
-    }
-
-    return regions;
   },
   getCities: async ({ id }: { id: string }) => {
-    if (!id) {
-      return new ErrorService.BadRequestError("ID de región es requerido");
+    try {
+      if (!id) {
+        return new ErrorService.BadRequestError("ID de región es requerido");
+      }
+
+      const parsedId = Number(id);
+
+      const cities: City[] = await prisma.city.findMany({
+        select: { id: true, city: true },
+        where: { regionId: parsedId },
+        orderBy: {
+          city: "asc",
+        },
+      });
+
+      if (!cities) {
+        return new ErrorService.NotFoundError("Ciudades no encontradas");
+      }
+
+      return cities;
+    } catch (error) {
+      console.error("Error al obtener ciudades:", error);
+      return new ErrorService.InternalServerError("Error al obtener ciudades");
     }
-
-    const parsedId = Number(id);
-
-    const cities: City[] = await prisma.city.findMany({
-      select: { id: true, city: true },
-      where: { regionId: parsedId },
-      orderBy: {
-        city: "asc",
-      },
-    });
-
-    if (!cities) {
-      return new ErrorService.NotFoundError("Ciudades no encontradas");
-    }
-
-    return cities;
   },
   getCounties: async ({ id }: { id: string }) => {
-    if (!id) {
-      return new ErrorService.BadRequestError("ID de ciudad es requerido");
+    try {
+      if (!id) {
+        return new ErrorService.BadRequestError("ID de ciudad es requerido");
+      }
+
+      const parsedId = Number(id);
+
+      const counties: County[] = await prisma.county.findMany({
+        select: { id: true, county: true },
+        where: { cityId: parsedId },
+        orderBy: {
+          county: "asc",
+        },
+      });
+
+      if (!counties) {
+        return new ErrorService.NotFoundError("Comunas no encontrados");
+      }
+
+      return counties;
+    } catch (error) {
+      console.error("Error al obtener comunas:", error);
+      return new ErrorService.InternalServerError("Error al obtener comunas");
     }
-
-    const parsedId = Number(id);
-
-    const counties: County[] = await prisma.county.findMany({
-      select: { id: true, county: true },
-      where: { cityId: parsedId },
-      orderBy: {
-        county: "asc",
-      },
-    });
-
-    if (!counties) {
-      return new ErrorService.NotFoundError("Comunas no encontrados");
-    }
-
-    return counties;
   },
   getUserById: async ({ id }: { id: string }) => {
-    if (!id) {
-      return new ErrorService.BadRequestError("ID de usuario es requerido");
-    }
+    try {
+      if (!id) {
+        return new ErrorService.BadRequestError("ID de usuario es requerido");
+      }
 
-    const user: Partial<User> | null = await prisma.user.findUnique({
-      select: {
-        id: true,
-        name: true,
-        surnames: true,
-        businessName: true,
-        profileImage: true,
-        birthday: true,
-        email: true,
-        address: true,
-        county: { select: { id: true, county: true } },
-        city: { select: { id: true, city: true } },
-        region: { select: { id: true, region: true } },
-        country: { select: { id: true, country: true } },
-        phone: true,
-        isCompany: true,
-        createdAt: true,
-        updatedAt: true,
-        userCategory: true,
-        accountType: true,
-        preferredContactMethod: true,
-        points: true,
-      },
-      where: { id },
-    });
-    if (!user) {
-      return new ErrorService.NotFoundError("Usuario no encontrado");
+      const user: Partial<User> | null = await prisma.user.findUnique({
+        select: {
+          id: true,
+          name: true,
+          surnames: true,
+          businessName: true,
+          profileImage: true,
+          birthday: true,
+          email: true,
+          address: true,
+          county: { select: { id: true, county: true } },
+          city: { select: { id: true, city: true } },
+          region: { select: { id: true, region: true } },
+          country: { select: { id: true, country: true } },
+          phone: true,
+          isCompany: true,
+          createdAt: true,
+          updatedAt: true,
+          userCategory: true,
+          accountType: true,
+          preferredContactMethod: true,
+          points: true,
+        },
+        where: { id },
+      });
+      if (!user) {
+        return new ErrorService.NotFoundError("Usuario no encontrado");
+      }
+      return user;
+    } catch (error) {
+      console.error("Error al obtener usuario por ID:", error);
+      return new ErrorService.InternalServerError("Error al obtener usuario por ID");
     }
-    return user;
   },
   getUsers: async () => {
-    const users: Partial<User>[] = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        surnames: true,
-        businessName: true,
-        profileImage: true,
-        birthday: true,
-        email: true,
-        address: true,
-        county: { select: { id: true, county: true } },
-        city: { select: { id: true, city: true } },
-        region: { select: { id: true, region: true } },
-        country: { select: { id: true, country: true } },
-        phone: true,
-        isCompany: true,
-        createdAt: true,
-        updatedAt: true,
-        userCategory: true,
-        accountType: true,
-        preferredContactMethod: true,
-        points: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
+    try {
+      const users: Partial<User>[] = await prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          surnames: true,
+          businessName: true,
+          profileImage: true,
+          birthday: true,
+          email: true,
+          address: true,
+          county: { select: { id: true, county: true } },
+          city: { select: { id: true, city: true } },
+          region: { select: { id: true, region: true } },
+          country: { select: { id: true, country: true } },
+          phone: true,
+          isCompany: true,
+          createdAt: true,
+          updatedAt: true,
+          userCategory: true,
+          accountType: true,
+          preferredContactMethod: true,
+          points: true,
+        },
+        orderBy: {
+          name: "asc",
+        },
+      });
 
-    if (!users) {
-      return new ErrorService.NotFoundError("Usuarios no encontrados");
+      if (!users) {
+        return new ErrorService.NotFoundError("Usuarios no encontrados");
+      }
+
+      return users;
+    } catch (error) {
+      console.error("Error al obtener usuarios:", error);
+      return new ErrorService.InternalServerError("Error al obtener usuarios");
     }
-
-    return users;
   },
   getUser: async ({ id }: { id: string }) => {
-    if (!id) {
-      return new ErrorService.BadRequestError("ID de usuario es requerido");
+    try {
+      if (!id) {
+        return new ErrorService.BadRequestError("ID de usuario es requerido");
+      }
+
+      const user: Partial<User> | null = await prisma.user.findUnique({
+        select: {
+          id: true,
+          name: true,
+          surnames: true,
+          businessName: true,
+          profileImage: true,
+          birthday: true,
+          email: true,
+          address: true,
+          county: { select: { id: true, county: true } },
+          city: { select: { id: true, city: true } },
+          region: { select: { id: true, region: true } },
+          country: { select: { id: true, country: true } },
+          phone: true,
+          isCompany: true,
+          createdAt: true,
+          updatedAt: true,
+          userCategory: true,
+          accountType: true,
+          preferredContactMethod: true,
+          points: true,
+        },
+        where: { id },
+      });
+
+      if (!user) {
+        return new ErrorService.NotFoundError("Usuario no encontrado");
+      }
+
+      return user;
+    } catch (error) {
+      console.error("Error al obtener usuario:", error);
+      return new ErrorService.InternalServerError("Error al obtener usuario");
     }
-
-    const user: Partial<User> | null = await prisma.user.findUnique({
-      select: {
-        id: true,
-        name: true,
-        surnames: true,
-        businessName: true,
-        profileImage: true,
-        birthday: true,
-        email: true,
-        address: true,
-        county: { select: { id: true, county: true } },
-        city: { select: { id: true, city: true } },
-        region: { select: { id: true, region: true } },
-        country: { select: { id: true, country: true } },
-        phone: true,
-        isCompany: true,
-        createdAt: true,
-        updatedAt: true,
-        userCategory: true,
-        accountType: true,
-        preferredContactMethod: true,
-        points: true,
-      },
-      where: { id },
-    });
-
-    if (!user) {
-      return new ErrorService.NotFoundError("Usuario no encontrado");
-    }
-
-    return user;
   },
   getMe: async ({ id }: { id: string }) => {
-    if (!id) {
-      return new ErrorService.BadRequestError("ID de usuario es requerido");
+    try {
+      if (!id) {
+        return new ErrorService.BadRequestError("ID de usuario es requerido");
+      }
+
+      const user: Partial<User> | null = await prisma.user.findUnique({
+        select: {
+          id: true,
+          name: true,
+          surnames: true,
+          businessName: true,
+          profileImage: true,
+          birthday: true,
+          email: true,
+          address: true,
+          county: { select: { id: true, county: true } },
+          city: { select: { id: true, city: true } },
+          region: { select: { id: true, region: true } },
+          country: { select: { id: true, country: true } },
+          phone: true,
+          isCompany: true,
+          createdAt: true,
+          updatedAt: true,
+          userCategory: true,
+          accountType: true,
+          preferredContactMethod: true,
+          points: true,
+        },
+        where: { id },
+      });
+
+      if (!user) {
+        return new ErrorService.NotFoundError("Usuario no encontrado");
+      }
+
+      return user;
+    } catch (error) {
+      console.error("Error al obtener usuario:", error);
+      return new ErrorService.InternalServerError("Error al obtener usuario");
     }
-
-    const user: Partial<User> | null = await prisma.user.findUnique({
-      select: {
-        id: true,
-        name: true,
-        surnames: true,
-        businessName: true,
-        profileImage: true,
-        birthday: true,
-        email: true,
-        address: true,
-        county: { select: { id: true, county: true } },
-        city: { select: { id: true, city: true } },
-        region: { select: { id: true, region: true } },
-        country: { select: { id: true, country: true } },
-        phone: true,
-        isCompany: true,
-        createdAt: true,
-        updatedAt: true,
-        userCategory: true,
-        accountType: true,
-        preferredContactMethod: true,
-        points: true,
-      },
-      where: { id },
-    });
-
-    if (!user) {
-      return new ErrorService.NotFoundError("Usuario no encontrado");
-    }
-
-    return user;
   },
   register: async ({ name, surnames, businessName, email, password, isCompany }: Partial<User>) => {
-    console.log("data", { name, surnames, businessName, email, password, isCompany });
     try {
       if ((!isCompany && !name) || (!isCompany && !surnames) || !email || !password || (isCompany && !businessName)) {
         return new ErrorService.BadRequestError("Faltan datos");
@@ -263,8 +302,6 @@ export const UserService = {
         return new ErrorService.InternalServerError("No se pudo crear el usuario");
       }
 
-      console.log("Usuario creado:", user);
-
       return user;
     } catch (error) {
       console.error("Error al registrar usuario:", error);
@@ -289,75 +326,85 @@ export const UserService = {
     preferredContactMethod,
     points,
   }: User) => {
-    const user: Partial<User> = await prisma.user.update({
-      data: {
-        name,
-        surnames,
-        businessName,
-        birthday,
-        email,
-        address,
-        countyId,
-        cityId,
-        regionId,
-        countryId,
-        phone,
-        profileImage,
-        accountType,
-        preferredContactMethod,
-        points,
-      },
-      select: {
-        id: true,
-        name: true,
-        surnames: true,
-        businessName: true,
-        profileImage: true,
-        birthday: true,
-        email: true,
-        address: true,
-        county: { select: { id: true, county: true } },
-        city: { select: { id: true, city: true } },
-        region: { select: { id: true, region: true } },
-        country: { select: { id: true, country: true } },
-        phone: true,
-        isCompany: true,
-        createdAt: true,
-        updatedAt: true,
-        userCategory: true,
-        accountType: true,
-        preferredContactMethod: true,
-        points: true,
-      },
-      where: { id },
-    });
+    try {
+      const user: Partial<User> = await prisma.user.update({
+        data: {
+          name,
+          surnames,
+          businessName,
+          birthday,
+          email,
+          address,
+          countyId,
+          cityId,
+          regionId,
+          countryId,
+          phone,
+          profileImage,
+          accountType,
+          preferredContactMethod,
+          points,
+        },
+        select: {
+          id: true,
+          name: true,
+          surnames: true,
+          businessName: true,
+          profileImage: true,
+          birthday: true,
+          email: true,
+          address: true,
+          county: { select: { id: true, county: true } },
+          city: { select: { id: true, city: true } },
+          region: { select: { id: true, region: true } },
+          country: { select: { id: true, country: true } },
+          phone: true,
+          isCompany: true,
+          createdAt: true,
+          updatedAt: true,
+          userCategory: true,
+          accountType: true,
+          preferredContactMethod: true,
+          points: true,
+        },
+        where: { id },
+      });
 
-    if (!user) {
-      return new ErrorService.InternalServerError("No se pudo actualizar el usuario");
+      if (!user) {
+        return new ErrorService.InternalServerError("No se pudo actualizar el usuario");
+      }
+
+      return user;
+    } catch (error) {
+      console.error("Error al actualizar perfil de usuario:", error);
+      return new ErrorService.InternalServerError("Error al actualizar perfil de usuario");
     }
-
-    return user;
   },
   updatePassword: async ({ password, newPassword, id }: { password: string; newPassword: string; id: string }) => {
-    if (!password || !newPassword) {
-      return new ErrorService.BadRequestError("Faltan datos");
+    try {
+      if (!password || !newPassword) {
+        return new ErrorService.BadRequestError("Faltan datos");
+      }
+      const user: Partial<User> | null = await prisma.user.findUnique({
+        where: { id },
+      });
+      if (!user) {
+        return new ErrorService.NotFoundError("Usuario no encontrado");
+      }
+      if (user.password !== password) {
+        return new ErrorService.BadRequestError("Contraseña incorrecta");
+      }
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: { password: newPassword },
+      });
+      if (!updatedUser) {
+        return new ErrorService.InternalServerError("No se pudo actualizar la contraseña");
+      }
+      return updatedUser;
+    } catch (error) {
+      console.error("Error al actualizar contraseña de usuario:", error);
+      return new ErrorService.InternalServerError("Error al actualizar contraseña de usuario");
     }
-    const user: Partial<User> | null = await prisma.user.findUnique({
-      where: { id },
-    });
-    if (!user) {
-      return new ErrorService.NotFoundError("Usuario no encontrado");
-    }
-    if (user.password !== password) {
-      return new ErrorService.BadRequestError("Contraseña incorrecta");
-    }
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: { password: newPassword },
-    });
-    if (!updatedUser) {
-      return new ErrorService.InternalServerError("No se pudo actualizar la contraseña");
-    }
-    return updatedUser;
   },
 };

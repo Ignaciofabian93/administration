@@ -302,8 +302,8 @@ export const UserService = {
       if (!user) {
         return new ErrorService.InternalServerError("No se pudo crear el usuario");
       }
-
-      await sendWelcomeEmail(formattedEmail, user.name as string);
+      // Enviar correo de bienvenida
+      await sendWelcomeEmail(formattedEmail, name as string, businessName as string);
 
       return user;
     } catch (error) {

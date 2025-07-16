@@ -72,6 +72,7 @@ export const typeDefs = gql`
     regions(id: ID!): [Region]
     cities(id: ID!): [City]
     counties(id: ID!): [County]
+    stores: [User]
     users: [User]
     user(id: ID!): User
     me: User

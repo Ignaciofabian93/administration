@@ -147,6 +147,50 @@ export const UserService = {
       return new ErrorService.InternalServerError("Error al obtener usuario por ID");
     }
   },
+  getStores: async () => {
+    try {
+      const stores = await prisma.user.findMany({
+        where: {
+          isCompany: true,
+        },
+        select: {
+          id: true,
+          businessName: true,
+          profileImage: true,
+          email: true,
+          address: true,
+          isCompany: true,
+          county: { select: { id: true, county: true } },
+          city: { select: { id: true, city: true } },
+          region: { select: { id: true, region: true } },
+          country: { select: { id: true, country: true } },
+          phone: true,
+          createdAt: true,
+          updatedAt: true,
+          userCategory: {
+            select: {
+              id: true,
+              pointsThreshold: true,
+              categoryDiscountAmount: true,
+              name: true,
+            },
+          },
+          accountType: true,
+          preferredContactMethod: true,
+          points: true,
+        },
+      });
+
+      if (!stores || stores.length === 0) {
+        return new ErrorService.NotFoundError("No se encontraron tiendas");
+      }
+
+      return stores;
+    } catch (error) {
+      console.error("Error al obtener tiendas:", error);
+      return new ErrorService.InternalServerError("Error al obtener tiendas");
+    }
+  },
   getUsers: async () => {
     try {
       const users: Partial<User>[] = await prisma.user.findMany({

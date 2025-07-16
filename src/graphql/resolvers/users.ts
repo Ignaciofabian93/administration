@@ -7,6 +7,7 @@ export const UserResolver = {
     regions: (_parent: unknown, _args: { id: string }) => UserService.getRegions(_args),
     cities: (_parent: unknown, _args: { id: string }) => UserService.getCities(_args),
     counties: (_parent: unknown, _args: { id: string }) => UserService.getCounties(_args),
+    stores: (_parent: unknown, _args: unknown) => UserService.getStores(),
     users: (_parent: unknown, _args: unknown) => UserService.getUsers(),
     user: (_parent: unknown, _args: { id: string }) => UserService.getUser(_args),
     me: (_parent: unknown, _args: unknown, context: { id: string }) => UserService.getMe(context),

@@ -3,6 +3,7 @@ import { type User } from "../../types/user";
 
 export const UserResolver = {
   Query: {
+    storeCatalog: (_parent: unknown, _args: unknown) => UserService.getStoreCatalog(),
     countries: (_parent: unknown, _args: unknown) => UserService.getCountries(),
     regions: (_parent: unknown, _args: { id: string }) => UserService.getRegions(_args),
     cities: (_parent: unknown, _args: { id: string }) => UserService.getCities(_args),

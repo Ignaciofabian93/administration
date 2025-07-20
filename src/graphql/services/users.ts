@@ -147,6 +147,28 @@ export const UserService = {
       return new ErrorService.InternalServerError("Error al obtener usuario por ID");
     }
   },
+  getStoreCatalog: async () => {
+    try {
+      const stores = await prisma.user.findMany({
+        where: {
+          isCompany: true,
+        },
+        select: {
+          id: true,
+          businessName: true,
+        },
+      });
+
+      if (!stores || stores.length === 0) {
+        return new ErrorService.NotFoundError("No se encontraron tiendas");
+      }
+
+      return stores;
+    } catch (error) {
+      console.error("Error al obtener catálogo de tiendas:", error);
+      return new ErrorService.InternalServerError("Error al obtener catálogo de tiendas");
+    }
+  },
   getStores: async () => {
     try {
       const stores = await prisma.user.findMany({

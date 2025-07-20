@@ -68,6 +68,8 @@ export const typeDefs = gql`
   }
 
   extend type Query {
+    storeCatalog: [User]
+
     countries: [Country]
     regions(id: ID!): [Region]
     cities(id: ID!): [City]

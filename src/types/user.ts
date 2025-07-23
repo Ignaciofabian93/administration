@@ -8,6 +8,7 @@ export type User = {
   businessName?: string | null;
   password: string;
   profileImage?: string | null;
+  coverImage?: string | null;
   birthday: string;
   phone: string;
   address: string;

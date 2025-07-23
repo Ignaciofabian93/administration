@@ -51,6 +51,7 @@ export const typeDefs = gql`
     email: String
     businessName: String
     profileImage: String
+    coverImage: String
     birthday: String
     phone: String
     address: String
@@ -102,6 +103,7 @@ export const typeDefs = gql`
       surnames: String
       email: String
       profileImage: String
+      coverImage: String
       accountType: AccountType
       preferredContactMethod: PreferredContactMethod
       points: Int

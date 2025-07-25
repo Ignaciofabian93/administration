@@ -78,7 +78,7 @@ export const typeDefs = gql`
     stores: [User]
     users: [User]
     user(id: ID!): User
-    me: User
+    me(id: ID!): User
   }
 
   extend type Mutation {

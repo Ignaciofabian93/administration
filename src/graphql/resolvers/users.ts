@@ -11,7 +11,7 @@ export const UserResolver = {
     stores: (_parent: unknown, _args: unknown) => UserService.getStores(),
     users: (_parent: unknown, _args: unknown) => UserService.getUsers(),
     user: (_parent: unknown, _args: { id: string }) => UserService.getUser(_args),
-    me: (_parent: unknown, _args: { id: string }) => UserService.getMe(_args),
+    me: (_parent: unknown, _args: unknown, context: { id: string }) => UserService.getMe(context),
   },
   Mutation: {
     updateProfile: (_parent: unknown, _args: User) => UserService.updateProfile(_args),

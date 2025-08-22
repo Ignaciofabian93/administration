@@ -12,24 +12,24 @@ model Session {
   token     String   @unique
   createdAt DateTime @default(now())
   expiresAt DateTime
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  sellerId  String
+  Seller    Seller   @relation(fields: [sellerId], references: [id])
 }
 
 model Country {
   id      Int      @id @default(autoincrement())
   country String
   regions Region[]
-  users   User[]
+  Seller  Seller[]
 }
 
 model Region {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   region    String
   countryId Int
   cities    City[]
-  country   Country @relation(fields: [countryId], references: [id])
-  users     User[]
+  country   Country  @relation(fields: [countryId], references: [id])
+  Seller    Seller[]
 }
 
 model City {
@@ -38,57 +38,15 @@ model City {
   regionId Int
   region   Region   @relation(fields: [regionId], references: [id])
   counties County[]
-  users    User[]
+  Seller   Seller[]
 }
 
 model County {
-  id     Int    @id @default(autoincrement())
+  id     Int      @id @default(autoincrement())
   county String
   cityId Int
-  city   City   @relation(fields: [cityId], references: [id])
-  users  User[]
-}
-
-model User {
-  id                     String           @id @default(uuid())
-  name                   String?
-  email                  String           @unique
-  password               String
-  isCompany              Boolean          @default(false)
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
-  userCategoryId         Int?
-  accountType            AccountType      @default(FREE)
-  address                String           @default("")
-  birthday               String           @default("")
-  businessName           String?
-  cityId                 Int              @default(40)
-  countryId              Int              @default(1)
-  countyId               Int              @default(268)
-  coverImage             String?
-  phone                  String           @default("")
-  points                 Int              @default(0)
-  preferredContactMethod ContactMethod    @default(WHATSAPP)
-  profileImage           String?
-  regionId               Int              @default(13)
-  surnames               String?
-  receivedChats          Chat[]           @relation("ChatReceiver")
-  sentChats              Chat[]           @relation("ChatSender")
-  matchesReceived        Match[]          @relation("MatchReceiver")
-  matchesSent            Match[]          @relation("MatchSender")
-  messages               Message[]
-  orders                 Order[]
-  products               Product[]
-  comments               ProductComment[]
-  likes                  ProductLike[]
-  sessions               Session[]
-  stories                Story[]
-  transactions           Transaction[]
-  city                   City             @relation(fields: [cityId], references: [id])
-  country                Country          @relation(fields: [countryId], references: [id])
-  county                 County           @relation(fields: [countyId], references: [id])
-  region                 Region           @relation(fields: [regionId], references: [id])
-  userCategory           UserCategory?    @relation(fields: [userCategoryId], references: [id])
+  city   City     @relation(fields: [cityId], references: [id])
+  Seller Seller[]
 }
 
 model Match {
@@ -97,17 +55,17 @@ model Match {
   receiverId String
   createdAt  DateTime @default(now())
   isMatched  Boolean  @default(false)
-  receiver   User     @relation("MatchReceiver", fields: [receiverId], references: [id])
-  sender     User     @relation("MatchSender", fields: [senderId], references: [id])
+  receiver   Seller   @relation("MatchReceiver", fields: [receiverId], references: [id])
+  sender     Seller   @relation("MatchSender", fields: [senderId], references: [id])
 }
 
 model UserCategory {
-  id                     Int    @id @default(autoincrement())
+  id                     Int      @id @default(autoincrement())
   name                   String
   categoryDiscountAmount Int
   pointsThreshold        Int
   level                  Int
-  users                  User[]
+  Seller                 Seller[]
 }
 
 model Product {
@@ -118,7 +76,7 @@ model Product {
   hasOffer                                      Boolean          @default(false)
   offerPrice                                    Int              @default(0)
   stock                                         Int              @default(0)
-  userId                                        String
+  sellerId                                      String
   badges                                        Badge[]
   barcode                                       String?          @unique
   brand                                         String
@@ -134,12 +92,17 @@ model Product {
   reviewsNumber                                 Int              @default(0)
   sku                                           String?
   updatedAt                                     DateTime         @updatedAt
+  condition                                     ProductCondition @default(USED)
+  conditionDescription                          String?
+  sustainabilityScore                           Int?
+  materialComposition                           String?
+  recycledContent                               Float?
   chats                                         Chat[]
   Exchange_Exchange_offeredProductIdToProduct   Exchange[]       @relation("Exchange_offeredProductIdToProduct")
   Exchange_Exchange_requestedProductIdToProduct Exchange[]       @relation("Exchange_requestedProductIdToProduct")
   itemsOrdered                                  OrderItem[]
   productCategory                               ProductCategory  @relation(fields: [productCategoryId], references: [id])
-  user                                          User             @relation(fields: [userId], references: [id])
+  Seller                                        Seller           @relation(fields: [sellerId], references: [id])
   comments                                      ProductComment[]
   likes                                         ProductLike[]
 }
@@ -147,18 +110,18 @@ model Product {
 model ProductLike {
   id        Int     @id @default(autoincrement())
   productId Int
-  userId    String
+  sellerId  String
   product   Product @relation(fields: [productId], references: [id])
-  user      User    @relation(fields: [userId], references: [id])
+  Seller    Seller  @relation(fields: [sellerId], references: [id])
 }
 
 model ProductComment {
   id        Int     @id @default(autoincrement())
   comment   String
   productId Int
-  userId    String
+  sellerId  String
   product   Product @relation(fields: [productId], references: [id])
-  user      User    @relation(fields: [userId], references: [id])
+  Seller    Seller  @relation(fields: [sellerId], references: [id])
 }
 
 model MaterialImpactEstimate {
@@ -219,9 +182,9 @@ model Transaction {
   kind            TransactionKind
   pointsCollected Int
   createdAt       DateTime        @default(now())
-  userId          String
+  sellerId        String
   Exchange        Exchange?
-  user            User            @relation(fields: [userId], references: [id])
+  Seller          Seller          @relation(fields: [sellerId], references: [id])
 }
 
 model Story {
@@ -229,17 +192,17 @@ model Story {
   images      String[]
   title       String
   description String
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  sellerId    String
+  Seller      Seller   @relation(fields: [sellerId], references: [id])
 }
 
 model Order {
   id               Int            @id @default(autoincrement())
-  userId           String
+  sellerId         String
   createdAt        DateTime       @default(now())
   shippingStatusId Int
+  Seller           Seller         @relation(fields: [sellerId], references: [id])
   shippingStatus   ShippingStatus @relation(fields: [shippingStatusId], references: [id])
-  user             User           @relation(fields: [userId], references: [id])
   orderItems       OrderItem[]
 }
 
@@ -266,8 +229,8 @@ model Chat {
   isExchange Boolean   @default(false)
   createdAt  DateTime  @default(now())
   product    Product?  @relation(fields: [productId], references: [id])
-  receiver   User      @relation("ChatReceiver", fields: [receiverId], references: [id])
-  sender     User      @relation("ChatSender", fields: [senderId], references: [id])
+  receiver   Seller    @relation("ChatReceiver", fields: [receiverId], references: [id])
+  sender     Seller    @relation("ChatSender", fields: [senderId], references: [id])
   messages   Message[]
 }
 
@@ -278,7 +241,7 @@ model Message {
   content   String
   createdAt DateTime @default(now())
   chat      Chat     @relation(fields: [chatId], references: [id])
-  sender    User     @relation(fields: [senderId], references: [id])
+  sender    Seller   @relation(fields: [senderId], references: [id])
 }
 
 model Admin {
@@ -320,6 +283,81 @@ model Exchange {
   Product_Exchange_offeredProductIdToProduct   Product        @relation("Exchange_offeredProductIdToProduct", fields: [offeredProductId], references: [id])
   Product_Exchange_requestedProductIdToProduct Product        @relation("Exchange_requestedProductIdToProduct", fields: [requestedProductId], references: [id])
   Transaction                                  Transaction    @relation(fields: [transactionId], references: [id])
+}
+
+model PersonProfile {
+  id             String    @id  @default(uuid())
+  sellerId       String    @unique
+  firstName      String
+  lastName       String?
+  displayName    String?
+  bio            String?
+  birthday       DateTime?
+  profileImage   String?
+  coverImage     String?
+  allowExchanges Boolean   @default(true)
+  Seller         Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+}
+
+model Seller {
+  id                     String           @id @default(uuid())
+  email                  String           @unique
+  password               String
+  sellerType             SellerType
+  isActive               Boolean          @default(true)
+  isVerified             Boolean          @default(false)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime
+  address                String?          @default("")
+  cityId                 Int?
+  countryId              Int?
+  countyId               Int?
+  regionId               Int?
+  phone                  String?          @default("")
+  website                String?
+  preferredContactMethod ContactMethod?   @default(WHATSAPP)
+  socialMediaLinks       Json?
+  accountType            AccountType?     @default(FREE)
+  points                 Int?             @default(0)
+  userCategoryId         Int?
+  receivedChats          Chat[]           @relation("ChatReceiver")
+  sentChats              Chat[]           @relation("ChatSender")
+  matchesReceived        Match[]          @relation("MatchReceiver")
+  matchesSent            Match[]          @relation("MatchSender")
+  messages               Message[]
+  Order                  Order[]
+  PersonProfile          PersonProfile?
+  Product                Product[]
+  ProductComment         ProductComment[]
+  ProductLike            ProductLike[]
+  City                   City?            @relation(fields: [cityId], references: [id])
+  Country                Country?         @relation(fields: [countryId], references: [id])
+  County                 County?          @relation(fields: [countyId], references: [id])
+  Region                 Region?          @relation(fields: [regionId], references: [id])
+  UserCategory           UserCategory?    @relation(fields: [userCategoryId], references: [id])
+  Session                Session[]
+  StoreProfile           StoreProfile?
+  Story                  Story[]
+  Transaction            Transaction[]
+}
+
+model StoreProfile {
+  id                   String  @id  @default(uuid())
+  sellerId             String  @unique
+  businessName         String
+  displayName          String?
+  description          String?
+  logo                 String?
+  coverImage           String?
+  businessType         String?
+  taxId                String?
+  businessRegistration String?
+  allowExchanges       Boolean @default(false)
+  minOrderAmount       Int?
+  shippingPolicy       String?
+  returnPolicy         String?
+  businessHours        Json?
+  Seller               Seller  @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }
 
 enum AccountType {
@@ -407,4 +445,21 @@ enum ExchangeStatus {
   DECLINED
   COMPLETED
   CANCELLED
+}
+
+enum ProductCondition {
+  NEW
+  LIKE_NEW
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+  FOR_PARTS
+  USED
+  REFURBISHED
+}
+
+enum SellerType {
+  PERSON
+  STORE
 }

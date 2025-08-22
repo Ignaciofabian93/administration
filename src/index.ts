@@ -4,7 +4,7 @@ import { buildSubgraphSchema } from "@apollo/subgraph";
 import { expressMiddleware } from "@apollo/server/express4";
 import { typeDefs } from "./graphql/schema";
 import { resolvers } from "./graphql/resolvers";
-import { decodedToken } from "./middleware/auth";
+import { createContext } from "./middleware/auth";
 
 const server = new ApolloServer({
   schema: buildSubgraphSchema([
@@ -16,8 +16,8 @@ const server = new ApolloServer({
   formatError: (err) => {
     // Log the error to the console
     console.error("GraphQL Error:", err);
-    // Return a generic error message to the client
-    return new Error("Un error inesperado ha ocurrido. Por favor, inténtalo de nuevo más tarde.");
+    // Return the actual error message for development, you can customize this for production
+    return err;
   },
 });
 
@@ -31,17 +31,7 @@ app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 app.use(
   "/graphql",
   expressMiddleware(server, {
-    context: async ({ req, res }) => {
-      const auth = req.headers.authorization;
-      const token = auth?.startsWith("Bearer ") ? auth.split(" ")[1] : undefined;
-
-      let userId: string | undefined;
-      if (token) {
-        userId = decodedToken(token)?.id;
-      }
-
-      return { req, res, token, id: userId };
-    },
+    context: async ({ req }) => createContext({ req }),
   }),
 );
 

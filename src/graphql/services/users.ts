@@ -1,11 +1,20 @@
 import prisma from "../../client/prisma";
 import { ErrorService } from "../../errors/errors";
-import { hash, genSalt } from "bcrypt";
-import { type User } from "../../types/user";
+import { hash, genSalt, compare } from "bcrypt";
+import {
+  type User,
+  type RegisterPersonInput,
+  type RegisterStoreInput,
+  type PersonProfile,
+  type StoreProfile,
+} from "../../types/user";
 import { type City, type County, type Region, type Country } from "../../types/location";
+import { type SellerType, type ContactMethod, type AccountType } from "../../types/enums";
 import { sendWelcomeEmail } from "../../mail/register";
+import { randomUUID } from "crypto";
 
 export const UserService = {
+  // Location queries
   getCountries: async () => {
     try {
       const countries: Country[] = await prisma.country.findMany({
@@ -17,23 +26,16 @@ export const UserService = {
           country: "asc",
         },
       });
-      if (!countries) {
-        return new ErrorService.NotFoundError("Países no encontrados");
-      }
       return countries;
     } catch (error) {
       console.error("Error al obtener países:", error);
-      return new ErrorService.InternalServerError("Error al obtener países");
+      throw new ErrorService.InternalServerError("Error al obtener países");
     }
   },
-  getRegions: async ({ id }: { id: string }) => {
+
+  getRegions: async ({ countryId }: { countryId: string }) => {
     try {
-      if (!id) {
-        return new ErrorService.BadRequestError("ID de país es requerido");
-      }
-
-      const parsedId = Number(id);
-
+      const parsedId = Number(countryId);
       const regions: Region[] = await prisma.region.findMany({
         select: {
           id: true,
@@ -44,25 +46,16 @@ export const UserService = {
           region: "asc",
         },
       });
-
-      if (!regions) {
-        return new ErrorService.NotFoundError("Regiones no encontradas");
-      }
-
       return regions;
     } catch (error) {
       console.error("Error al obtener regiones:", error);
-      return new ErrorService.InternalServerError("Error al obtener regiones");
+      throw new ErrorService.InternalServerError("Error al obtener regiones");
     }
   },
-  getCities: async ({ id }: { id: string }) => {
+
+  getCities: async ({ regionId }: { regionId: string }) => {
     try {
-      if (!id) {
-        return new ErrorService.BadRequestError("ID de región es requerido");
-      }
-
-      const parsedId = Number(id);
-
+      const parsedId = Number(regionId);
       const cities: City[] = await prisma.city.findMany({
         select: { id: true, city: true },
         where: { regionId: parsedId },
@@ -70,25 +63,16 @@ export const UserService = {
           city: "asc",
         },
       });
-
-      if (!cities) {
-        return new ErrorService.NotFoundError("Ciudades no encontradas");
-      }
-
       return cities;
     } catch (error) {
       console.error("Error al obtener ciudades:", error);
-      return new ErrorService.InternalServerError("Error al obtener ciudades");
+      throw new ErrorService.InternalServerError("Error al obtener ciudades");
     }
   },
-  getCounties: async ({ id }: { id: string }) => {
+
+  getCounties: async ({ cityId }: { cityId: string }) => {
     try {
-      if (!id) {
-        return new ErrorService.BadRequestError("ID de ciudad es requerido");
-      }
-
-      const parsedId = Number(id);
-
+      const parsedId = Number(cityId);
       const counties: County[] = await prisma.county.findMany({
         select: { id: true, county: true },
         where: { cityId: parsedId },
@@ -96,391 +80,570 @@ export const UserService = {
           county: "asc",
         },
       });
-
-      if (!counties) {
-        return new ErrorService.NotFoundError("Comunas no encontrados");
-      }
-
       return counties;
     } catch (error) {
       console.error("Error al obtener comunas:", error);
-      return new ErrorService.InternalServerError("Error al obtener comunas");
+      throw new ErrorService.InternalServerError("Error al obtener comunas");
     }
   },
-  getUserById: async ({ id }: { id: string }) => {
+
+  // User queries
+  getUsers: async (args: {
+    sellerType?: SellerType;
+    isActive?: boolean;
+    isVerified?: boolean;
+    limit?: number;
+    offset?: number;
+  }) => {
     try {
-      if (!id) {
-        return new ErrorService.BadRequestError("ID de usuario es requerido");
-      }
+      const where: any = {};
+      if (args.sellerType) where.sellerType = args.sellerType;
+      if (args.isActive !== undefined) where.isActive = args.isActive;
+      if (args.isVerified !== undefined) where.isVerified = args.isVerified;
 
-      const user: Partial<User> | null = await prisma.user.findUnique({
-        select: {
-          id: true,
-          name: true,
-          surnames: true,
-          businessName: true,
-          profileImage: true,
-          birthday: true,
-          email: true,
-          address: true,
-          county: { select: { id: true, county: true } },
-          city: { select: { id: true, city: true } },
-          region: { select: { id: true, region: true } },
-          country: { select: { id: true, country: true } },
-          phone: true,
-          isCompany: true,
-          createdAt: true,
-          updatedAt: true,
-          userCategory: true,
-          accountType: true,
-          preferredContactMethod: true,
-          points: true,
+      const users = await prisma.seller.findMany({
+        where,
+        include: {
+          PersonProfile: true,
+          StoreProfile: true,
+          Country: true,
+          Region: true,
+          City: true,
+          County: true,
+          UserCategory: true,
         },
-        where: { id },
+        orderBy: { createdAt: "desc" },
+        take: args.limit || undefined,
+        skip: args.offset || undefined,
       });
-      if (!user) {
-        return new ErrorService.NotFoundError("Usuario no encontrado");
-      }
-      return user;
-    } catch (error) {
-      console.error("Error al obtener usuario por ID:", error);
-      return new ErrorService.InternalServerError("Error al obtener usuario por ID");
-    }
-  },
-  getStoreCatalog: async () => {
-    try {
-      const stores = await prisma.user.findMany({
-        where: {
-          isCompany: true,
-        },
-        select: {
-          id: true,
-          businessName: true,
-        },
-      });
-
-      if (!stores || stores.length === 0) {
-        return new ErrorService.NotFoundError("No se encontraron tiendas");
-      }
-
-      return stores;
-    } catch (error) {
-      console.error("Error al obtener catálogo de tiendas:", error);
-      return new ErrorService.InternalServerError("Error al obtener catálogo de tiendas");
-    }
-  },
-  getStores: async () => {
-    try {
-      const stores = await prisma.user.findMany({
-        where: {
-          isCompany: true,
-        },
-        select: {
-          id: true,
-          businessName: true,
-          profileImage: true,
-          coverImage: true,
-          email: true,
-          address: true,
-          isCompany: true,
-          county: { select: { id: true, county: true } },
-          city: { select: { id: true, city: true } },
-          region: { select: { id: true, region: true } },
-          country: { select: { id: true, country: true } },
-          phone: true,
-          createdAt: true,
-          updatedAt: true,
-          userCategory: {
-            select: {
-              id: true,
-              pointsThreshold: true,
-              categoryDiscountAmount: true,
-              name: true,
-            },
-          },
-          accountType: true,
-          preferredContactMethod: true,
-          points: true,
-        },
-      });
-
-      if (!stores || stores.length === 0) {
-        return new ErrorService.NotFoundError("No se encontraron tiendas");
-      }
-
-      return stores;
-    } catch (error) {
-      console.error("Error al obtener tiendas:", error);
-      return new ErrorService.InternalServerError("Error al obtener tiendas");
-    }
-  },
-  getUsers: async () => {
-    try {
-      const users: Partial<User>[] = await prisma.user.findMany({
-        select: {
-          id: true,
-          name: true,
-          surnames: true,
-          businessName: true,
-          profileImage: true,
-          coverImage: true,
-          birthday: true,
-          email: true,
-          address: true,
-          county: { select: { id: true, county: true } },
-          city: { select: { id: true, city: true } },
-          region: { select: { id: true, region: true } },
-          country: { select: { id: true, country: true } },
-          phone: true,
-          isCompany: true,
-          createdAt: true,
-          updatedAt: true,
-          userCategory: true,
-          accountType: true,
-          preferredContactMethod: true,
-          points: true,
-        },
-        orderBy: {
-          name: "asc",
-        },
-      });
-
-      if (!users) {
-        return new ErrorService.NotFoundError("Usuarios no encontrados");
-      }
-
       return users;
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
-      return new ErrorService.InternalServerError("Error al obtener usuarios");
+      throw new ErrorService.InternalServerError("Error al obtener usuarios");
     }
   },
-  getUser: async ({ id }: { id: string }) => {
+
+  getUserById: async ({ id }: { id: string }) => {
     try {
-      if (!id) {
-        return new ErrorService.BadRequestError("ID de usuario es requerido");
-      }
-
-      const user: Partial<User> | null = await prisma.user.findUnique({
-        select: {
-          id: true,
-          name: true,
-          surnames: true,
-          businessName: true,
-          profileImage: true,
-          coverImage: true,
-          birthday: true,
-          email: true,
-          address: true,
-          county: { select: { id: true, county: true } },
-          city: { select: { id: true, city: true } },
-          region: { select: { id: true, region: true } },
-          country: { select: { id: true, country: true } },
-          phone: true,
-          isCompany: true,
-          createdAt: true,
-          updatedAt: true,
-          userCategory: true,
-          accountType: true,
-          preferredContactMethod: true,
-          points: true,
-        },
+      const user = await prisma.seller.findUnique({
         where: { id },
+        include: {
+          PersonProfile: true,
+          StoreProfile: true,
+          Country: true,
+          Region: true,
+          City: true,
+          County: true,
+          UserCategory: true,
+        },
       });
-
-      if (!user) {
-        return new ErrorService.NotFoundError("Usuario no encontrado");
-      }
-
       return user;
     } catch (error) {
-      console.error("Error al obtener usuario:", error);
-      return new ErrorService.InternalServerError("Error al obtener usuario");
+      console.error("Error al obtener usuario por ID:", error);
+      throw new ErrorService.InternalServerError("Error al obtener usuario por ID");
     }
   },
+
+  getUserByEmail: async ({ email }: { email: string }) => {
+    try {
+      const user = await prisma.seller.findUnique({
+        where: { email: email.toLowerCase() },
+        include: {
+          PersonProfile: true,
+          StoreProfile: true,
+          Country: true,
+          Region: true,
+          City: true,
+          County: true,
+          UserCategory: true,
+        },
+      });
+      return user;
+    } catch (error) {
+      console.error("Error al obtener usuario por email:", error);
+      throw new ErrorService.InternalServerError("Error al obtener usuario por email");
+    }
+  },
+
   getMe: async ({ id }: { id: string }) => {
     try {
-      if (!id) {
-        return new ErrorService.BadRequestError("ID de usuario es requerido");
-      }
-
-      const user: Partial<User> | null = await prisma.user.findUnique({
-        select: {
-          id: true,
-          name: true,
-          surnames: true,
-          businessName: true,
-          profileImage: true,
-          coverImage: true,
-          birthday: true,
-          email: true,
-          address: true,
-          county: { select: { id: true, county: true } },
-          city: { select: { id: true, city: true } },
-          region: { select: { id: true, region: true } },
-          country: { select: { id: true, country: true } },
-          phone: true,
-          isCompany: true,
-          createdAt: true,
-          updatedAt: true,
-          userCategory: true,
-          accountType: true,
-          preferredContactMethod: true,
-          points: true,
-        },
+      const sellerType = await prisma.seller.findUnique({
         where: { id },
+        select: { sellerType: true },
       });
 
-      if (!user) {
-        return new ErrorService.NotFoundError("Usuario no encontrado");
-      }
+      if (sellerType?.sellerType === "PERSON") {
+        const userProfile = await prisma.seller.findUnique({
+          where: { id },
+          include: {
+            PersonProfile: true,
+            Country: true,
+            Region: true,
+            City: true,
+            County: true,
+            UserCategory: true,
+          },
+        });
+        console.log("user!!: ", userProfile);
 
-      return user;
+        return userProfile;
+      } else {
+        const storeProfile = await prisma.seller.findUnique({
+          where: { id },
+          include: {
+            StoreProfile: true,
+            Country: true,
+            Region: true,
+            City: true,
+            County: true,
+            UserCategory: true,
+          },
+        });
+        return storeProfile;
+      }
     } catch (error) {
-      console.error("Error al obtener usuario:", error);
-      return new ErrorService.InternalServerError("Error al obtener usuario");
+      console.error("Error al obtener usuario actual:", error);
+      throw new ErrorService.InternalServerError("Error al obtener usuario actual");
     }
   },
-  register: async ({ name, surnames, businessName, email, password, isCompany }: Partial<User>) => {
+
+  getStores: async (args: { isActive?: boolean; isVerified?: boolean; limit?: number; offset?: number }) => {
     try {
-      if ((!isCompany && !name) || (!isCompany && !surnames) || !email || !password || (isCompany && !businessName)) {
-        return new ErrorService.BadRequestError("Faltan datos");
+      const where: any = { sellerType: "STORE" };
+      if (args.isActive !== undefined) where.isActive = args.isActive;
+      if (args.isVerified !== undefined) where.isVerified = args.isVerified;
+
+      const stores = await prisma.seller.findMany({
+        where,
+        include: {
+          StoreProfile: true,
+          Country: true,
+          Region: true,
+          City: true,
+          County: true,
+          UserCategory: true,
+        },
+        orderBy: { createdAt: "desc" },
+        take: args.limit || undefined,
+        skip: args.offset || undefined,
+      });
+      return stores;
+    } catch (error) {
+      console.error("Error al obtener tiendas:", error);
+      throw new ErrorService.InternalServerError("Error al obtener tiendas");
+    }
+  },
+
+  getStoreCatalog: async () => {
+    try {
+      return await UserService.getStores({ isActive: true, isVerified: true });
+    } catch (error) {
+      console.error("Error al obtener catálogo de tiendas:", error);
+      throw new ErrorService.InternalServerError("Error al obtener catálogo de tiendas");
+    }
+  },
+
+  // User categories
+  getUserCategories: async () => {
+    try {
+      const categories = await prisma.userCategory.findMany({
+        orderBy: { level: "asc" },
+      });
+      return categories;
+    } catch (error) {
+      console.error("Error al obtener categorías de usuario:", error);
+      throw new ErrorService.InternalServerError("Error al obtener categorías de usuario");
+    }
+  },
+
+  getUserCategory: async ({ id }: { id: string }) => {
+    try {
+      const category = await prisma.userCategory.findUnique({
+        where: { id: Number(id) },
+      });
+      return category;
+    } catch (error) {
+      console.error("Error al obtener categoría de usuario:", error);
+      throw new ErrorService.InternalServerError("Error al obtener categoría de usuario");
+    }
+  },
+
+  // Sessions
+  getMySessions: async ({ userId }: { userId: string }) => {
+    try {
+      const sessions = await prisma.session.findMany({
+        where: {
+          sellerId: userId,
+          expiresAt: { gt: new Date() },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      return sessions;
+    } catch (error) {
+      console.error("Error al obtener sesiones de usuario:", error);
+      throw new ErrorService.InternalServerError("Error al obtener sesiones de usuario");
+    }
+  },
+
+  // Registration
+  registerPerson: async (input: RegisterPersonInput) => {
+    try {
+      const { email, password, firstName, lastName, ...profileData } = input;
+
+      // Check if user already exists
+      const existingUser = await prisma.seller.findUnique({
+        where: { email: email.toLowerCase() },
+      });
+
+      if (existingUser) {
+        throw new ErrorService.BadRequestError("Ya existe un usuario con este email");
       }
 
-      const formattedEmail = email.toLowerCase();
-      const salt = await genSalt();
+      // Hash password
+      const salt = await genSalt(12);
       const hashedPassword = await hash(password, salt);
 
-      const user: Partial<User> = await prisma.user.create({
-        data: {
-          name,
-          surnames,
-          businessName: businessName ?? null,
-          email: formattedEmail,
-          password: hashedPassword,
-          isCompany,
-          countyId: 268, // Default county ID
-          cityId: 40, // Default city ID
-          regionId: 13, // Default region ID
-          countryId: 1, // Default country ID
-          userCategoryId: 1, // Default user category ID
-          accountType: "FREE", // Default account type
-          preferredContactMethod: "ALL", // Default contact method
-        },
+      // Create user and profile in transaction
+      const result = await prisma.$transaction(async (tx) => {
+        const user = await tx.seller.create({
+          data: {
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            sellerType: "PERSON",
+            address: profileData.address || "",
+            phone: profileData.phone || "",
+            website: profileData.website || null,
+            preferredContactMethod: profileData.preferredContactMethod || "WHATSAPP",
+            cityId: profileData.cityId || null,
+            countyId: profileData.countyId || null,
+            regionId: profileData.regionId || null,
+            countryId: profileData.countryId || null,
+            updatedAt: new Date(),
+          },
+        });
+
+        await tx.personProfile.create({
+          data: {
+            sellerId: user.id,
+            firstName,
+            lastName: lastName || null,
+            displayName: profileData.displayName || null,
+            bio: profileData.bio || null,
+            birthday: profileData.birthday || null,
+            allowExchanges: profileData.allowExchanges ?? true,
+          },
+        });
+
+        return user;
       });
 
-      if (!user) {
-        return new ErrorService.InternalServerError("No se pudo crear el usuario");
-      }
-      // Enviar correo de bienvenida
-      await sendWelcomeEmail(formattedEmail, name as string, businessName as string);
+      // Send welcome email
+      await sendWelcomeEmail(email.toLowerCase(), firstName, "");
 
-      return user;
+      return await UserService.getUserById({ id: result.id });
     } catch (error) {
-      console.error("Error al registrar usuario:", error);
-      return new ErrorService.InternalServerError("Error al registrar usuario");
+      console.error("Error al registrar persona:", error);
+      if (error instanceof ErrorService.BadRequestError) throw error;
+      throw new ErrorService.InternalServerError("Error al registrar persona");
     }
   },
-  updateProfile: async ({
-    id,
-    name,
-    surnames,
-    businessName,
-    profileImage,
-    coverImage,
-    birthday,
+
+  registerStore: async (input: RegisterStoreInput) => {
+    try {
+      const { email, password, businessName, ...profileData } = input;
+
+      // Check if user already exists
+      const existingUser = await prisma.seller.findUnique({
+        where: { email: email.toLowerCase() },
+      });
+
+      if (existingUser) {
+        throw new ErrorService.BadRequestError("Ya existe un usuario con este email");
+      }
+
+      // Hash password
+      const salt = await genSalt(12);
+      const hashedPassword = await hash(password, salt);
+
+      // Create user and profile in transaction
+      const result = await prisma.$transaction(async (tx) => {
+        const user = await tx.seller.create({
+          data: {
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            sellerType: "STORE",
+            address: profileData.address || "",
+            phone: profileData.phone || "",
+            website: profileData.website || null,
+            preferredContactMethod: profileData.preferredContactMethod || "WHATSAPP",
+            cityId: profileData.cityId || null,
+            countyId: profileData.countyId || null,
+            regionId: profileData.regionId || null,
+            countryId: profileData.countryId || null,
+            updatedAt: new Date(),
+          },
+        });
+
+        await tx.storeProfile.create({
+          data: {
+            sellerId: user.id,
+            businessName,
+            displayName: profileData.displayName || null,
+            description: profileData.description || null,
+            businessType: profileData.businessType || null,
+            taxId: profileData.taxId || null,
+            businessRegistration: profileData.businessRegistration || null,
+            allowExchanges: profileData.allowExchanges ?? false,
+            minOrderAmount: profileData.minOrderAmount || null,
+            shippingPolicy: profileData.shippingPolicy || null,
+            returnPolicy: profileData.returnPolicy || null,
+          },
+        });
+
+        return user;
+      });
+
+      // Send welcome email
+      await sendWelcomeEmail(email.toLowerCase(), "", businessName);
+
+      return await UserService.getUserById({ id: result.id });
+    } catch (error) {
+      console.error("Error al registrar tienda:", error);
+      if (error instanceof ErrorService.BadRequestError) throw error;
+      throw new ErrorService.InternalServerError("Error al registrar tienda");
+    }
+  },
+
+  // Password management
+  updatePassword: async ({
+    userId,
+    currentPassword,
+    newPassword,
+  }: {
+    userId: string;
+    currentPassword: string;
+    newPassword: string;
+  }) => {
+    try {
+      const user = await prisma.seller.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user || !(await compare(currentPassword, user.password))) {
+        throw new ErrorService.BadRequestError("La contraseña actual es incorrecta");
+      }
+
+      const salt = await genSalt(12);
+      const hashedNewPassword = await hash(newPassword, salt);
+
+      await prisma.seller.update({
+        where: { id: userId },
+        data: { password: hashedNewPassword },
+      });
+
+      return await UserService.getUserById({ id: userId });
+    } catch (error) {
+      console.error("Error al actualizar contraseña:", error);
+      if (error instanceof ErrorService.BadRequestError) throw error;
+      throw new ErrorService.InternalServerError("Error al actualizar contraseña");
+    }
+  },
+
+  // Profile updates
+  updateUser: async ({ userId, input }: { userId: string; input: any }) => {
+    try {
+      await prisma.seller.update({
+        where: { id: userId },
+        data: input,
+      });
+
+      return await UserService.getUserById({ id: userId });
+    } catch (error) {
+      console.error("Error al actualizar usuario:", error);
+      throw new ErrorService.InternalServerError("Error al actualizar usuario");
+    }
+  },
+
+  updatePersonProfile: async ({ userId, input }: { userId: string; input: any }) => {
+    try {
+      await prisma.personProfile.update({
+        where: { sellerId: userId },
+        data: input,
+      });
+
+      return await UserService.getUserById({ id: userId });
+    } catch (error) {
+      console.error("Error al actualizar perfil de persona:", error);
+      throw new ErrorService.InternalServerError("Error al actualizar perfil de persona");
+    }
+  },
+
+  updateStoreProfile: async ({ userId, input }: { userId: string; input: any }) => {
+    try {
+      await prisma.storeProfile.update({
+        where: { sellerId: userId },
+        data: input,
+      });
+
+      return await UserService.getUserById({ id: userId });
+    } catch (error) {
+      console.error("Error al actualizar perfil de tienda:", error);
+      throw new ErrorService.InternalServerError("Error al actualizar perfil de tienda");
+    }
+  },
+
+  // Account management
+  deactivateAccount: async ({ userId }: { userId: string }) => {
+    try {
+      await prisma.seller.update({
+        where: { id: userId },
+        data: { isActive: false },
+      });
+
+      return await UserService.getUserById({ id: userId });
+    } catch (error) {
+      console.error("Error al desactivar cuenta:", error);
+      throw new ErrorService.InternalServerError("Error al desactivar cuenta");
+    }
+  },
+
+  reactivateAccount: async ({ userId }: { userId: string }) => {
+    try {
+      await prisma.seller.update({
+        where: { id: userId },
+        data: { isActive: true },
+      });
+
+      return await UserService.getUserById({ id: userId });
+    } catch (error) {
+      console.error("Error reactivating account:", error);
+      throw new ErrorService.InternalServerError("Error reactivating account");
+    }
+  },
+
+  deleteAccount: async ({ userId, password }: { userId: string; password: string }) => {
+    try {
+      const user = await prisma.seller.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user || !(await compare(password, user.password))) {
+        throw new ErrorService.BadRequestError("Invalid password");
+      }
+
+      await prisma.seller.delete({
+        where: { id: userId },
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      if (error instanceof ErrorService.BadRequestError) throw error;
+      throw new ErrorService.InternalServerError("Error deleting account");
+    }
+  },
+
+  // Points management
+  addPoints: async ({ userId, points }: { userId: string; points: number }) => {
+    try {
+      await prisma.seller.update({
+        where: { id: userId },
+        data: { points: { increment: points } },
+      });
+
+      return await UserService.getUserById({ id: userId });
+    } catch (error) {
+      console.error("Error adding points:", error);
+      throw new ErrorService.InternalServerError("Error adding points");
+    }
+  },
+
+  deductPoints: async ({ userId, points }: { userId: string; points: number }) => {
+    try {
+      await prisma.seller.update({
+        where: { id: userId },
+        data: { points: { decrement: points } },
+      });
+
+      return await UserService.getUserById({ id: userId });
+    } catch (error) {
+      console.error("Error deducting points:", error);
+      throw new ErrorService.InternalServerError("Error deducting points");
+    }
+  },
+
+  updateUserCategory: async ({ userId, categoryId }: { userId: string; categoryId: string }) => {
+    try {
+      await prisma.seller.update({
+        where: { id: userId },
+        data: { userCategoryId: Number(categoryId) },
+      });
+
+      return await UserService.getUserById({ id: userId });
+    } catch (error) {
+      console.error("Error updating user category:", error);
+      throw new ErrorService.InternalServerError("Error updating user category");
+    }
+  },
+
+  // Admin functions
+  adminCreateUser: async ({
     email,
-    phone,
-    address,
-    countyId,
-    cityId,
-    regionId,
-    countryId,
-    accountType,
-    preferredContactMethod,
-    points,
-  }: User) => {
+    sellerType,
+    isVerified,
+  }: {
+    email: string;
+    sellerType: SellerType;
+    isVerified?: boolean;
+  }) => {
     try {
-      const user: Partial<User> = await prisma.user.update({
+      const tempPassword = randomUUID();
+      const salt = await genSalt(12);
+      const hashedPassword = await hash(tempPassword, salt);
+
+      const user = await prisma.seller.create({
         data: {
-          name,
-          surnames,
-          businessName,
-          birthday,
-          email,
-          address,
-          countyId,
-          cityId,
-          regionId,
-          countryId,
-          phone,
-          profileImage,
-          coverImage,
-          accountType,
-          preferredContactMethod,
-          points,
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          sellerType,
+          isVerified: isVerified ?? false,
+          address: "",
+          phone: "",
+          updatedAt: new Date(),
         },
-        select: {
-          id: true,
-          name: true,
-          surnames: true,
-          businessName: true,
-          profileImage: true,
-          coverImage: true,
-          birthday: true,
-          email: true,
-          address: true,
-          county: { select: { id: true, county: true } },
-          city: { select: { id: true, city: true } },
-          region: { select: { id: true, region: true } },
-          country: { select: { id: true, country: true } },
-          phone: true,
-          isCompany: true,
-          createdAt: true,
-          updatedAt: true,
-          userCategory: true,
-          accountType: true,
-          preferredContactMethod: true,
-          points: true,
-        },
-        where: { id },
       });
 
-      if (!user) {
-        return new ErrorService.InternalServerError("No se pudo actualizar el usuario");
-      }
-
-      return user;
+      return await UserService.getUserById({ id: user.id });
     } catch (error) {
-      console.error("Error al actualizar perfil de usuario:", error);
-      return new ErrorService.InternalServerError("Error al actualizar perfil de usuario");
+      console.error("Error creating user (admin):", error);
+      throw new ErrorService.InternalServerError("Error creating user");
     }
   },
-  updatePassword: async ({ password, newPassword, id }: { password: string; newPassword: string; id: string }) => {
+
+  adminUpdateUser: async ({ userId, input }: { userId: string; input: any }) => {
     try {
-      if (!password || !newPassword) {
-        return new ErrorService.BadRequestError("Faltan datos");
-      }
-      const user: Partial<User> | null = await prisma.user.findUnique({
-        where: { id },
+      await prisma.seller.update({
+        where: { id: userId },
+        data: input,
       });
-      if (!user) {
-        return new ErrorService.NotFoundError("Usuario no encontrado");
-      }
-      if (user.password !== password) {
-        return new ErrorService.BadRequestError("Contraseña incorrecta");
-      }
-      const updatedUser = await prisma.user.update({
-        where: { id },
-        data: { password: newPassword },
-      });
-      if (!updatedUser) {
-        return new ErrorService.InternalServerError("No se pudo actualizar la contraseña");
-      }
-      return updatedUser;
+
+      return await UserService.getUserById({ id: userId });
     } catch (error) {
-      console.error("Error al actualizar contraseña de usuario:", error);
-      return new ErrorService.InternalServerError("Error al actualizar contraseña de usuario");
+      console.error("Error updating user (admin):", error);
+      throw new ErrorService.InternalServerError("Error updating user");
+    }
+  },
+
+  adminDeleteUser: async ({ userId }: { userId: string }) => {
+    try {
+      await prisma.seller.delete({
+        where: { id: userId },
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error deleting user (admin):", error);
+      throw new ErrorService.InternalServerError("Error deleting user");
     }
   },
 };

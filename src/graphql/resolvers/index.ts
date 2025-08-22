@@ -8,6 +8,9 @@ export const resolvers = {
     ...UserResolver.Mutation,
   },
   User: {
-    __resolveReference: UserResolver.User.__resolveReference,
+    ...UserResolver.User,
+  },
+  Profile: {
+    ...UserResolver.Profile,
   },
 };

@@ -7,20 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Session {
-  id        String   @id @default(uuid())
-  token     String   @unique
+model Admin {
+  id        String   @id
+  email     String   @unique
+  password  String
+  name      String
   createdAt DateTime @default(now())
-  expiresAt DateTime
-  sellerId  String
-  Seller    Seller   @relation(fields: [sellerId], references: [id])
+  updatedAt DateTime
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+// LOCATION
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 model Country {
   id      Int      @id @default(autoincrement())
   country String
   regions Region[]
-  Seller  Seller[]
+  sellers Seller[]
 }
 
 model Region {
@@ -29,7 +33,7 @@ model Region {
   countryId Int
   cities    City[]
   country   Country  @relation(fields: [countryId], references: [id])
-  Seller    Seller[]
+  sellers   Seller[]
 }
 
 model City {
@@ -38,7 +42,7 @@ model City {
   regionId Int
   region   Region   @relation(fields: [regionId], references: [id])
   counties County[]
-  Seller   Seller[]
+  sellers  Seller[]
 }
 
 model County {
@@ -46,9 +50,12 @@ model County {
   county String
   cityId Int
   city   City     @relation(fields: [cityId], references: [id])
-  Seller Seller[]
+  sellers Seller[]
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// INTERACTIONS
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 model Match {
   id         Int      @id @default(autoincrement())
   senderId   String
@@ -59,81 +66,31 @@ model Match {
   sender     Seller   @relation("MatchSender", fields: [senderId], references: [id])
 }
 
-model UserCategory {
-  id                     Int      @id @default(autoincrement())
-  name                   String
-  categoryDiscountAmount Int
-  pointsThreshold        Int
-  level                  Int
-  Seller                 Seller[]
+model Story {
+  id          Int      @id @default(autoincrement())
+  images      String[]
+  title       String
+  description String
+  sellerId    String
+  seller      Seller   @relation(fields: [sellerId], references: [id])
 }
 
-model Product {
-  id                                            Int              @id @default(autoincrement())
-  name                                          String
-  description                                   String
-  price                                         Int
-  hasOffer                                      Boolean          @default(false)
-  offerPrice                                    Int              @default(0)
-  stock                                         Int              @default(0)
-  sellerId                                      String
-  badges                                        Badge[]
-  barcode                                       String?          @unique
-  brand                                         String
-  color                                         String?
-  createdAt                                     DateTime         @default(now())
-  images                                        String[]
-  interests                                     String[]
-  isActive                                      Boolean          @default(true)
-  isExchangeable                                Boolean          @default(false)
-  productCategoryId                             Int
-  ratingCount                                   Int              @default(0)
-  ratings                                       Float            @default(0)
-  reviewsNumber                                 Int              @default(0)
-  sku                                           String?
-  updatedAt                                     DateTime         @updatedAt
-  condition                                     ProductCondition @default(USED)
-  conditionDescription                          String?
-  sustainabilityScore                           Int?
-  materialComposition                           String?
-  recycledContent                               Float?
-  chats                                         Chat[]
-  Exchange_Exchange_offeredProductIdToProduct   Exchange[]       @relation("Exchange_offeredProductIdToProduct")
-  Exchange_Exchange_requestedProductIdToProduct Exchange[]       @relation("Exchange_requestedProductIdToProduct")
-  itemsOrdered                                  OrderItem[]
-  productCategory                               ProductCategory  @relation(fields: [productCategoryId], references: [id])
-  Seller                                        Seller           @relation(fields: [sellerId], references: [id])
-  comments                                      ProductComment[]
-  likes                                         ProductLike[]
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// PRODUCT
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+model Department {
+  id                   Int                  @id @default(autoincrement())
+  departmentName       String
+  departmentCategories DepartmentCategory[]
+  departmentImage      String?
 }
 
-model ProductLike {
-  id        Int     @id @default(autoincrement())
-  productId Int
-  sellerId  String
-  product   Product @relation(fields: [productId], references: [id])
-  Seller    Seller  @relation(fields: [sellerId], references: [id])
-}
-
-model ProductComment {
-  id        Int     @id @default(autoincrement())
-  comment   String
-  productId Int
-  sellerId  String
-  product   Product @relation(fields: [productId], references: [id])
-  Seller    Seller  @relation(fields: [sellerId], references: [id])
-}
-
-model MaterialImpactEstimate {
-  id                      Int               @id @default(autoincrement())
-  materialType            String
-  estimatedCo2SavingsKG   Float
-  estimatedWaterSavingsLT Float
-  fifthMaterialTypeFor    ProductCategory[] @relation("FifthMaterialType")
-  firstMaterialTypeFor    ProductCategory[] @relation("FirstMaterialType")
-  fourthMaterialTypeFor   ProductCategory[] @relation("FourthMaterialType")
-  secondMaterialTypeFor   ProductCategory[] @relation("SecondMaterialType")
-  thirdMaterialTypeFor    ProductCategory[] @relation("ThirdMaterialType")
+model DepartmentCategory {
+  id                     Int               @id @default(autoincrement())
+  departmentId           Int
+  departmentCategoryName String
+  department             Department        @relation(fields: [departmentId], references: [id])
+  productCategories      ProductCategory[]
 }
 
 model ProductCategory {
@@ -163,19 +120,81 @@ model ProductCategory {
   thirdMaterialType          MaterialImpactEstimate? @relation("ThirdMaterialType", fields: [thirdMaterialTypeId], references: [id])
 }
 
-model DepartmentCategory {
-  id                     Int               @id @default(autoincrement())
-  departmentId           Int
-  departmentCategoryName String
-  department             Department        @relation(fields: [departmentId], references: [id])
-  productCategories      ProductCategory[]
+model Product {
+  id                                            Int              @id @default(autoincrement())
+  name                                          String
+  description                                   String
+  price                                         Int
+  hasOffer                                      Boolean          @default(false)
+  offerPrice                                    Int              @default(0)
+  stock                                         Int              @default(0)
+  sellerId                                      String
+  badges                                        Badge[]
+  barcode                                       String?          @unique
+  brand                                         String
+  color                                         String?
+  createdAt                                     DateTime         @default(now())
+  images                                        String[]
+  interests                                     String[]
+  isActive                                      Boolean          @default(true)
+  isExchangeable                                Boolean          @default(false)
+  productCategoryId                             Int
+  ratingCount                                   Int              @default(0)
+  ratings                                       Float            @default(0)
+  reviewsNumber                                 Int              @default(0)
+  sku                                           String?
+  updatedAt                                     DateTime         @updatedAt
+  condition                                     ProductCondition @default(NEW)
+  conditionDescription                          String?
+  sustainabilityScore                           Int?
+  materialComposition                           String?
+  recycledContent                               Float?
+  chats                                         Chat[]
+  Exchange_Exchange_offeredProductIdToProduct   Exchange[]       @relation("Exchange_offeredProductIdToProduct")
+  Exchange_Exchange_requestedProductIdToProduct Exchange[]       @relation("Exchange_requestedProductIdToProduct")
+  itemsOrdered                                  OrderItem[]
+  productCategory                               ProductCategory  @relation(fields: [productCategoryId], references: [id])
+  seller                                        Seller           @relation(fields: [sellerId], references: [id])
+  comments                                      ProductComment[]
+  likes                                         ProductLike[]
+  productVariants                               ProductVariant[]
 }
 
-model Department {
-  id                   Int                  @id @default(autoincrement())
-  departmentName       String
-  departmentCategories DepartmentCategory[]
+model ProductVariant {
+  id         Int   @id @default(autoincrement())
+  productId  Int
+  name       String
+  price      Int
+  stock      Int
+  color      String?
+  size       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  product    Product  @relation(fields: [productId], references: [id])
+
+  @@unique([productId, color, size]) // Ensure unique variant names per product
 }
+
+model ProductLike {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  sellerId  String
+  product   Product @relation(fields: [productId], references: [id])
+  seller    Seller  @relation(fields: [sellerId], references: [id])
+}
+
+model ProductComment {
+  id        Int     @id @default(autoincrement())
+  comment   String
+  productId Int
+  sellerId  String
+  product   Product @relation(fields: [productId], references: [id])
+  seller    Seller  @relation(fields: [sellerId], references: [id])
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TRANSACTIONS
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 model Transaction {
   id              Int             @id @default(autoincrement())
@@ -183,17 +202,8 @@ model Transaction {
   pointsCollected Int
   createdAt       DateTime        @default(now())
   sellerId        String
-  Exchange        Exchange?
-  Seller          Seller          @relation(fields: [sellerId], references: [id])
-}
-
-model Story {
-  id          Int      @id @default(autoincrement())
-  images      String[]
-  title       String
-  description String
-  sellerId    String
-  Seller      Seller   @relation(fields: [sellerId], references: [id])
+  exchange        Exchange?
+  seller          Seller          @relation(fields: [sellerId], references: [id])
 }
 
 model Order {
@@ -201,7 +211,7 @@ model Order {
   sellerId         String
   createdAt        DateTime       @default(now())
   shippingStatusId Int
-  Seller           Seller         @relation(fields: [sellerId], references: [id])
+  seller           Seller         @relation(fields: [sellerId], references: [id])
   shippingStatus   ShippingStatus @relation(fields: [shippingStatusId], references: [id])
   orderItems       OrderItem[]
 }
@@ -244,13 +254,33 @@ model Message {
   sender    Seller   @relation(fields: [senderId], references: [id])
 }
 
-model Admin {
-  id        String   @id
-  email     String   @unique
-  password  String
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime
+model Exchange {
+  id                                           Int            @id @default(autoincrement())
+  transactionId                                Int            @unique
+  offeredProductId                             Int
+  requestedProductId                           Int
+  status                                       ExchangeStatus @default(PENDING)
+  notes                                        String?
+  createdAt                                    DateTime       @default(now())
+  completedAt                                  DateTime?
+  offeredProduct   Product        @relation("Exchange_offeredProductIdToProduct", fields: [offeredProductId], references: [id])
+  requestedProduct Product        @relation("Exchange_requestedProductIdToProduct", fields: [requestedProductId], references: [id])
+  transaction     Transaction    @relation(fields: [transactionId], references: [id])
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// IMPACT
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+model MaterialImpactEstimate {
+  id                      Int               @id @default(autoincrement())
+  materialType            String
+  estimatedCo2SavingsKG   Float
+  estimatedWaterSavingsLT Float
+  fifthMaterialTypeFor    ProductCategory[] @relation("FifthMaterialType")
+  firstMaterialTypeFor    ProductCategory[] @relation("FirstMaterialType")
+  fourthMaterialTypeFor   ProductCategory[] @relation("FourthMaterialType")
+  secondMaterialTypeFor   ProductCategory[] @relation("SecondMaterialType")
+  thirdMaterialTypeFor    ProductCategory[] @relation("ThirdMaterialType")
 }
 
 model Co2ImpactMessage {
@@ -270,35 +300,9 @@ model WaterImpactMessage {
   message2 String
   message3 String
 }
-
-model Exchange {
-  id                                           Int            @id @default(autoincrement())
-  transactionId                                Int            @unique
-  offeredProductId                             Int
-  requestedProductId                           Int
-  status                                       ExchangeStatus @default(PENDING)
-  notes                                        String?
-  createdAt                                    DateTime       @default(now())
-  completedAt                                  DateTime?
-  Product_Exchange_offeredProductIdToProduct   Product        @relation("Exchange_offeredProductIdToProduct", fields: [offeredProductId], references: [id])
-  Product_Exchange_requestedProductIdToProduct Product        @relation("Exchange_requestedProductIdToProduct", fields: [requestedProductId], references: [id])
-  Transaction                                  Transaction    @relation(fields: [transactionId], references: [id])
-}
-
-model PersonProfile {
-  id             String    @id  @default(uuid())
-  sellerId       String    @unique
-  firstName      String
-  lastName       String?
-  displayName    String?
-  bio            String?
-  birthday       DateTime?
-  profileImage   String?
-  coverImage     String?
-  allowExchanges Boolean   @default(true)
-  Seller         Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-}
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SELLER
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 model Seller {
   id                     String           @id @default(uuid())
   email                  String           @unique
@@ -319,26 +323,39 @@ model Seller {
   socialMediaLinks       Json?
   accountType            AccountType?     @default(FREE)
   points                 Int?             @default(0)
-  userCategoryId         Int?
+  sellerCategoryId       Int?
   receivedChats          Chat[]           @relation("ChatReceiver")
   sentChats              Chat[]           @relation("ChatSender")
   matchesReceived        Match[]          @relation("MatchReceiver")
   matchesSent            Match[]          @relation("MatchSender")
   messages               Message[]
-  Order                  Order[]
-  PersonProfile          PersonProfile?
-  Product                Product[]
-  ProductComment         ProductComment[]
-  ProductLike            ProductLike[]
-  City                   City?            @relation(fields: [cityId], references: [id])
-  Country                Country?         @relation(fields: [countryId], references: [id])
-  County                 County?          @relation(fields: [countyId], references: [id])
-  Region                 Region?          @relation(fields: [regionId], references: [id])
-  UserCategory           UserCategory?    @relation(fields: [userCategoryId], references: [id])
-  Session                Session[]
-  StoreProfile           StoreProfile?
-  Story                  Story[]
-  Transaction            Transaction[]
+  orders                 Order[]
+  personProfile          PersonProfile?
+  products               Product[]
+  productComments        ProductComment[]
+  productLikes           ProductLike[]
+  city                   City?            @relation(fields: [cityId], references: [id])
+  country                Country?         @relation(fields: [countryId], references: [id])
+  county                 County?          @relation(fields: [countyId], references: [id])
+  region                 Region?          @relation(fields: [regionId], references: [id])
+  sellerCategory         SellerCategory?  @relation(fields: [sellerCategoryId], references: [id])
+  storeProfile           StoreProfile?
+  stories                Story[]
+  transactions           Transaction[]
+}
+
+model PersonProfile {
+  id             String    @id  @default(uuid())
+  sellerId       String    @unique
+  firstName      String
+  lastName       String?
+  displayName    String?
+  bio            String?
+  birthday       DateTime?
+  profileImage   String?
+  coverImage     String?
+  allowExchanges Boolean   @default(true)
+  seller         Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }
 
 model StoreProfile {
@@ -357,8 +374,21 @@ model StoreProfile {
   shippingPolicy       String?
   returnPolicy         String?
   businessHours        Json?
-  Seller               Seller  @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  seller               Seller  @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }
+
+model SellerCategory {
+  id                     Int      @id @default(autoincrement())
+  name                   String
+  categoryDiscountAmount Int
+  pointsThreshold        Int
+  level                  Int
+  sellers                Seller[]
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ENUMS 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum AccountType {
   FREE
@@ -386,7 +416,6 @@ enum Badge {
   POPULAR
   DISCOUNTED
   WOMAN_OWNED
-  ECO_FRIENDLY
   BEST_SELLER
   TOP_RATED
   COMMUNITY_FAVORITE
@@ -401,10 +430,6 @@ enum Badge {
   LIMITED_STOCK
   SEASONAL
   FREE_SHIPPING
-  NEW
-  USED
-  SLIGHT_DAMAGE
-  WORN
   FOR_REPAIR
   REFURBISHED
   EXCHANGEABLE
@@ -421,6 +446,8 @@ enum Badge {
 enum ContactMethod {
   EMAIL
   WHATSAPP
+  PHONE
+  INSTAGRAM
   ALL
 }
 
@@ -449,13 +476,11 @@ enum ExchangeStatus {
 
 enum ProductCondition {
   NEW
+  OPEN_BOX
   LIKE_NEW
-  EXCELLENT
-  GOOD
   FAIR
   POOR
   FOR_PARTS
-  USED
   REFURBISHED
 }
 

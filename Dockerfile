@@ -14,6 +14,6 @@ RUN npm run build
 
 RUN npx prisma generate
 
-EXPOSE 4001
+EXPOSE 9001
 
 CMD [ "npm", "start" ]

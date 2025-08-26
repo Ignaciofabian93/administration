@@ -1,4 +1,5 @@
 import prisma from "../../client/prisma";
+import { type Prisma } from "@prisma/client";
 import { ErrorService } from "../../errors/errors";
 import { hash, genSalt, compare } from "bcrypt";
 import {
@@ -287,7 +288,7 @@ export const UserService = {
       const hashedPassword = await hash(password, salt);
 
       // Create user and profile in transaction
-      const result = await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const user = await tx.seller.create({
           data: {
             email: email.toLowerCase(),
@@ -349,7 +350,7 @@ export const UserService = {
       const hashedPassword = await hash(password, salt);
 
       // Create user and profile in transaction
-      const result = await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const user = await tx.seller.create({
           data: {
             email: email.toLowerCase(),

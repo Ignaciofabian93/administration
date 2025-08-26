@@ -104,13 +104,13 @@ export const UserService = {
       const users = await prisma.seller.findMany({
         where,
         include: {
-          PersonProfile: true,
-          StoreProfile: true,
-          Country: true,
-          Region: true,
-          City: true,
-          County: true,
-          UserCategory: true,
+          personProfile: true,
+          storeProfile: true,
+          country: true,
+          region: true,
+          city: true,
+          county: true,
+          sellerCategory: true,
         },
         orderBy: { createdAt: "desc" },
         take: args.limit || undefined,
@@ -128,13 +128,13 @@ export const UserService = {
       const user = await prisma.seller.findUnique({
         where: { id },
         include: {
-          PersonProfile: true,
-          StoreProfile: true,
-          Country: true,
-          Region: true,
-          City: true,
-          County: true,
-          UserCategory: true,
+          personProfile: true,
+          storeProfile: true,
+          country: true,
+          region: true,
+          city: true,
+          county: true,
+          sellerCategory: true,
         },
       });
       return user;
@@ -149,13 +149,13 @@ export const UserService = {
       const user = await prisma.seller.findUnique({
         where: { email: email.toLowerCase() },
         include: {
-          PersonProfile: true,
-          StoreProfile: true,
-          Country: true,
-          Region: true,
-          City: true,
-          County: true,
-          UserCategory: true,
+          personProfile: true,
+          storeProfile: true,
+          country: true,
+          region: true,
+          city: true,
+          county: true,
+          sellerCategory: true,
         },
       });
       return user;
@@ -176,12 +176,12 @@ export const UserService = {
         const userProfile = await prisma.seller.findUnique({
           where: { id },
           include: {
-            PersonProfile: true,
-            Country: true,
-            Region: true,
-            City: true,
-            County: true,
-            UserCategory: true,
+            personProfile: true,
+            country: true,
+            region: true,
+            city: true,
+            county: true,
+            sellerCategory: true,
           },
         });
         console.log("user!!: ", userProfile);
@@ -191,12 +191,12 @@ export const UserService = {
         const storeProfile = await prisma.seller.findUnique({
           where: { id },
           include: {
-            StoreProfile: true,
-            Country: true,
-            Region: true,
-            City: true,
-            County: true,
-            UserCategory: true,
+            storeProfile: true,
+            country: true,
+            region: true,
+            city: true,
+            county: true,
+            sellerCategory: true,
           },
         });
         return storeProfile;
@@ -216,12 +216,12 @@ export const UserService = {
       const stores = await prisma.seller.findMany({
         where,
         include: {
-          StoreProfile: true,
-          Country: true,
-          Region: true,
-          City: true,
-          County: true,
-          UserCategory: true,
+          storeProfile: true,
+          country: true,
+          region: true,
+          city: true,
+          county: true,
+          sellerCategory: true,
         },
         orderBy: { createdAt: "desc" },
         take: args.limit || undefined,
@@ -246,7 +246,7 @@ export const UserService = {
   // User categories
   getUserCategories: async () => {
     try {
-      const categories = await prisma.userCategory.findMany({
+      const categories = await prisma.sellerCategory.findMany({
         orderBy: { level: "asc" },
       });
       return categories;
@@ -258,30 +258,13 @@ export const UserService = {
 
   getUserCategory: async ({ id }: { id: string }) => {
     try {
-      const category = await prisma.userCategory.findUnique({
+      const category = await prisma.sellerCategory.findUnique({
         where: { id: Number(id) },
       });
       return category;
     } catch (error) {
       console.error("Error al obtener categoría de usuario:", error);
       throw new ErrorService.InternalServerError("Error al obtener categoría de usuario");
-    }
-  },
-
-  // Sessions
-  getMySessions: async ({ userId }: { userId: string }) => {
-    try {
-      const sessions = await prisma.session.findMany({
-        where: {
-          sellerId: userId,
-          expiresAt: { gt: new Date() },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-      return sessions;
-    } catch (error) {
-      console.error("Error al obtener sesiones de usuario:", error);
-      throw new ErrorService.InternalServerError("Error al obtener sesiones de usuario");
     }
   },
 
@@ -576,7 +559,7 @@ export const UserService = {
     try {
       await prisma.seller.update({
         where: { id: userId },
-        data: { userCategoryId: Number(categoryId) },
+        data: { sellerCategoryId: Number(categoryId) },
       });
 
       return await UserService.getUserById({ id: userId });

@@ -46,10 +46,10 @@ model City {
 }
 
 model County {
-  id     Int      @id @default(autoincrement())
-  county String
-  cityId Int
-  city   City     @relation(fields: [cityId], references: [id])
+  id      Int      @id @default(autoincrement())
+  county  String
+  cityId  Int
+  city    City     @relation(fields: [cityId], references: [id])
   sellers Seller[]
 }
 
@@ -81,8 +81,8 @@ model Story {
 model Department {
   id                   Int                  @id @default(autoincrement())
   departmentName       String
-  departmentCategories DepartmentCategory[]
   departmentImage      String?
+  departmentCategories DepartmentCategory[]
 }
 
 model DepartmentCategory {
@@ -161,16 +161,16 @@ model Product {
 }
 
 model ProductVariant {
-  id         Int   @id @default(autoincrement())
-  productId  Int
-  name       String
-  price      Int
-  stock      Int
-  color      String?
-  size       String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  product    Product  @relation(fields: [productId], references: [id])
+  id        Int      @id @default(autoincrement())
+  productId Int
+  name      String
+  price     Int
+  stock     Int
+  color     String?
+  size      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
 
   @@unique([productId, color, size]) // Ensure unique variant names per product
 }
@@ -255,17 +255,17 @@ model Message {
 }
 
 model Exchange {
-  id                                           Int            @id @default(autoincrement())
-  transactionId                                Int            @unique
-  offeredProductId                             Int
-  requestedProductId                           Int
-  status                                       ExchangeStatus @default(PENDING)
-  notes                                        String?
-  createdAt                                    DateTime       @default(now())
-  completedAt                                  DateTime?
-  offeredProduct   Product        @relation("Exchange_offeredProductIdToProduct", fields: [offeredProductId], references: [id])
-  requestedProduct Product        @relation("Exchange_requestedProductIdToProduct", fields: [requestedProductId], references: [id])
-  transaction     Transaction    @relation(fields: [transactionId], references: [id])
+  id                 Int            @id @default(autoincrement())
+  transactionId      Int            @unique
+  offeredProductId   Int
+  requestedProductId Int
+  status             ExchangeStatus @default(PENDING)
+  notes              String?
+  createdAt          DateTime       @default(now())
+  completedAt        DateTime?
+  offeredProduct     Product        @relation("Exchange_offeredProductIdToProduct", fields: [offeredProductId], references: [id])
+  requestedProduct   Product        @relation("Exchange_requestedProductIdToProduct", fields: [requestedProductId], references: [id])
+  transaction        Transaction    @relation(fields: [transactionId], references: [id])
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -300,6 +300,7 @@ model WaterImpactMessage {
   message2 String
   message3 String
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SELLER
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -345,7 +346,7 @@ model Seller {
 }
 
 model PersonProfile {
-  id             String    @id  @default(uuid())
+  id             String    @id @default(uuid())
   sellerId       String    @unique
   firstName      String
   lastName       String?
@@ -359,7 +360,7 @@ model PersonProfile {
 }
 
 model StoreProfile {
-  id                   String  @id  @default(uuid())
+  id                   String  @id @default(uuid())
   sellerId             String  @unique
   businessName         String
   displayName          String?

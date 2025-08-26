@@ -40,10 +40,6 @@ export const UserResolver = {
     // Categories
     userCategories: () => UserService.getUserCategories(),
     userCategory: (_parent: unknown, args: { id: string }) => UserService.getUserCategory(args),
-
-    // Sessions
-    mySessions: (_parent: unknown, _args: unknown, context: { userId: string }) =>
-      UserService.getMySessions({ userId: context.userId }),
   },
 
   Mutation: {

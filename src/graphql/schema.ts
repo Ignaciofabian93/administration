@@ -218,9 +218,6 @@ export const typeDefs = gql`
     # Categories
     userCategories: [UserCategory!]!
     userCategory(id: ID!): UserCategory
-
-    # Sessions
-    mySessions: [Session!]!
   }
 
   extend type Mutation {

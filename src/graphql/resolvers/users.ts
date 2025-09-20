@@ -37,6 +37,24 @@ export const UserResolver = {
     ) => UserService.getStores(args),
     storeCatalog: () => UserService.getStoreCatalog(),
 
+    // Service-specific queries
+    services: (
+      _parent: unknown,
+      args: {
+        isActive?: boolean;
+        isVerified?: boolean;
+        limit?: number;
+        offset?: number;
+      },
+    ) => {
+      // Temporary: Use getUsers with SERVICE filter until getServices is implemented
+      return UserService.getUsers({ ...args, sellerType: "SERVICE" as any });
+    },
+    serviceProviders: () => {
+      // Temporary: Use getUsers with SERVICE filter until getServiceProviders is implemented
+      return UserService.getUsers({ sellerType: "SERVICE" as any, isActive: true, isVerified: true });
+    },
+
     // Categories
     userCategories: () => UserService.getUserCategories(),
     userCategory: (_parent: unknown, args: { id: string }) => UserService.getUserCategory(args),
@@ -46,6 +64,7 @@ export const UserResolver = {
     // Registration
     registerPerson: (_parent: unknown, args: { input: RegisterPersonInput }) => UserService.registerPerson(args.input),
     registerStore: (_parent: unknown, args: { input: RegisterStoreInput }) => UserService.registerStore(args.input),
+    // registerService: (_parent: unknown, args: { input: any }) => UserService.registerService(args.input), // TODO: Implement registerService
 
     // Password management
     updatePassword: (
@@ -68,12 +87,17 @@ export const UserResolver = {
     },
 
     // Profile updates
-    updateUser: (_parent: unknown, args: { input: any }, context: { userId: string }) =>
-      UserService.updateUser({ userId: context.userId, input: args.input }),
-    updatePersonProfile: (_parent: unknown, args: { input: any }, context: { userId: string }) =>
-      UserService.updatePersonProfile({ userId: context.userId, input: args.input }),
-    updateStoreProfile: (_parent: unknown, args: { input: any }, context: { userId: string }) =>
-      UserService.updateStoreProfile({ userId: context.userId, input: args.input }),
+    updateUser: (_parent: unknown, args: { input: any }, context: { userId: string }) => {
+      return UserService.updateUser({ userId: context.userId, input: args.input });
+    },
+    updatePersonProfile: (_parent: unknown, args: { input: any }, context: { userId: string }) => {
+      return UserService.updatePersonProfile({ userId: context.userId, input: args.input });
+    },
+    updateStoreProfile: (_parent: unknown, args: { input: any }, context: { userId: string }) => {
+      return UserService.updateStoreProfile({ userId: context.userId, input: args.input });
+    },
+    // updateServiceProfile: (_parent: unknown, args: { input: any }, context: { userId: string }) =>
+    //   UserService.updateServiceProfile({ userId: context.userId, input: args.input }), // TODO: Implement updateServiceProfile
 
     // Account management
     verifyAccount: (_parent: unknown, args: { token: string }) => {
@@ -111,25 +135,27 @@ export const UserResolver = {
   User: {
     __resolveReference: (reference: { id: string }) => UserService.getUserById(reference),
     profile: (parent: any) => {
-      console.log("parent::", parent);
-
-      if (parent.sellerType === "PERSON") return parent.PersonProfile;
-      if (parent.sellerType === "STORE") return parent.StoreProfile;
+      if (parent.sellerType === "PERSON") return parent.personProfile; // ✅ Fixed: camelCase
+      if (parent.sellerType === "STORE") return parent.storeProfile; // ✅ Fixed: camelCase
+      if (parent.sellerType === "SERVICE") return parent.serviceProfile; // ✅ Fixed: camelCase
       return null;
     },
-    country: (parent: any) => parent.Country,
-    region: (parent: any) => parent.Region,
-    city: (parent: any) => parent.City,
-    county: (parent: any) => parent.County,
-    userCategory: (parent: any) => parent.UserCategory,
+    country: (parent: any) => parent.country, // ✅ Fixed: camelCase
+    region: (parent: any) => parent.region, // ✅ Fixed: camelCase
+    city: (parent: any) => parent.city, // ✅ Fixed: camelCase
+    county: (parent: any) => parent.county, // ✅ Fixed: camelCase
+    userCategory: (parent: any) => parent.sellerCategory, // ✅ Fixed: matches Prisma include
   },
   Profile: {
     __resolveType(obj: any) {
-      if (obj.firstName !== undefined && obj.lastName !== undefined) {
+      if (obj.firstName !== undefined) {
         return "PersonProfile";
       }
-      if (obj.businessName !== undefined && obj.taxId !== undefined) {
+      if (obj.businessName !== undefined && obj.serviceArea === undefined) {
         return "StoreProfile";
+      }
+      if (obj.businessName !== undefined && obj.serviceArea !== undefined) {
+        return "ServiceProfile";
       }
       return null;
     },

@@ -1,5 +1,5 @@
 export type AccountType = "FREE" | "PLUS" | "PREMIUM";
-export type SellerType = "PERSON" | "STORE";
+export type SellerType = "PERSON" | "STORE" | "SERVICE";
 export type TransactionKind = "PURCHASE" | "EXCHANGE" | "GIFT" | "REFERRAL" | "BONUS";
 export type ShippingStage = "PREPARING" | "SHIPPED" | "DELIVERED" | "RETURNED" | "CANCELED";
 export type Badge =

@@ -12,12 +12,15 @@ export const typeDefs = gql`
   enum ContactMethod {
     EMAIL
     WHATSAPP
+    PHONE
+    INSTAGRAM
     ALL
   }
 
   enum SellerType {
     PERSON
     STORE
+    SERVICE
   }
 
   type UserCategory {
@@ -79,6 +82,30 @@ export const typeDefs = gql`
     businessHours: JSON
   }
 
+  type ServiceProfile {
+    id: ID!
+    sellerId: String!
+    businessName: String!
+    displayName: String
+    description: String
+    logo: String
+    coverImage: String
+    businessType: String
+    taxId: String
+    businessRegistration: String
+    allowExchanges: Boolean!
+    minOrderAmount: Int
+    serviceArea: String
+    serviceHours: JSON
+    yearsOfExperience: Int
+    licenseNumber: String
+    insuranceInfo: String
+    certifications: [String!]!
+    emergencyService: Boolean!
+    travelRadius: Int
+    responsiveness: String
+  }
+
   type Session {
     id: ID!
     token: String!
@@ -90,7 +117,7 @@ export const typeDefs = gql`
   scalar DateTime
   scalar JSON
 
-  union Profile = PersonProfile | StoreProfile
+  union Profile = PersonProfile | StoreProfile | ServiceProfile
 
   type User @key(fields: "id") {
     id: ID!
@@ -119,19 +146,7 @@ export const typeDefs = gql`
     email: String!
     password: String!
     firstName: String!
-    lastName: String
-    displayName: String
-    bio: String
-    birthday: DateTime
-    address: String
-    cityId: Int
-    countyId: Int
-    regionId: Int
-    countryId: Int
-    phone: String
-    website: String
-    preferredContactMethod: ContactMethod
-    allowExchanges: Boolean
+    lastName: String!
   }
 
   input RegisterStoreInput {
@@ -139,22 +154,13 @@ export const typeDefs = gql`
     password: String!
     businessName: String!
     displayName: String
-    description: String
-    businessType: String
-    taxId: String
-    businessRegistration: String
-    address: String
-    cityId: Int
-    countyId: Int
-    regionId: Int
-    countryId: Int
-    phone: String
-    website: String
-    preferredContactMethod: ContactMethod
-    allowExchanges: Boolean
-    minOrderAmount: Int
-    shippingPolicy: String
-    returnPolicy: String
+  }
+
+  input RegisterServiceInput {
+    email: String!
+    password: String!
+    businessName: String!
+    displayName: String
   }
 
   input UpdatePersonProfileInput {
@@ -184,6 +190,28 @@ export const typeDefs = gql`
     businessHours: JSON
   }
 
+  input UpdateServiceProfileInput {
+    businessName: String
+    displayName: String
+    description: String
+    logo: String
+    coverImage: String
+    businessType: String
+    taxId: String
+    businessRegistration: String
+    allowExchanges: Boolean
+    minOrderAmount: Int
+    serviceArea: String
+    serviceHours: JSON
+    yearsOfExperience: Int
+    licenseNumber: String
+    insuranceInfo: String
+    certifications: [String!]
+    emergencyService: Boolean
+    travelRadius: Int
+    responsiveness: String
+  }
+
   input UpdateUserInput {
     email: String
     address: String
@@ -208,12 +236,15 @@ export const typeDefs = gql`
     # User queries
     users(sellerType: SellerType, isActive: Boolean, isVerified: Boolean, limit: Int, offset: Int): [User!]!
     user(id: ID!): User
-    userByEmail(email: String!): User
     me: User
 
     # Store-specific queries
     stores(isActive: Boolean, isVerified: Boolean, limit: Int, offset: Int): [User!]!
     storeCatalog: [User!]!
+
+    # Service-specific queries
+    services(isActive: Boolean, isVerified: Boolean, limit: Int, offset: Int): [User!]!
+    serviceProviders: [User!]!
 
     # Categories
     userCategories: [UserCategory!]!
@@ -224,12 +255,7 @@ export const typeDefs = gql`
     # Registration
     registerPerson(input: RegisterPersonInput!): User!
     registerStore(input: RegisterStoreInput!): User!
-
-    # Authentication
-    login(email: String!, password: String!): String!
-    logout: Boolean!
-    logoutAllSessions: Boolean!
-    refreshToken: String!
+    registerService(input: RegisterServiceInput!): User!
 
     # Password management
     updatePassword(currentPassword: String!, newPassword: String!): User!
@@ -240,6 +266,7 @@ export const typeDefs = gql`
     updateUser(input: UpdateUserInput!): User!
     updatePersonProfile(input: UpdatePersonProfileInput!): User!
     updateStoreProfile(input: UpdateStoreProfileInput!): User!
+    updateServiceProfile(input: UpdateServiceProfileInput!): User!
 
     # Account management
     verifyAccount(token: String!): User!

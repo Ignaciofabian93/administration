@@ -107,6 +107,7 @@ export const UserService = {
         include: {
           personProfile: true,
           storeProfile: true,
+          serviceProfile: true, // ✅ Added missing serviceProfile
           country: true,
           region: true,
           city: true,
@@ -131,6 +132,7 @@ export const UserService = {
         include: {
           personProfile: true,
           storeProfile: true,
+          serviceProfile: true, // ✅ Added missing serviceProfile
           country: true,
           region: true,
           city: true,
@@ -152,6 +154,7 @@ export const UserService = {
         include: {
           personProfile: true,
           storeProfile: true,
+          serviceProfile: true, // ✅ Added missing serviceProfile
           country: true,
           region: true,
           city: true,
@@ -185,10 +188,9 @@ export const UserService = {
             sellerCategory: true,
           },
         });
-        console.log("user!!: ", userProfile);
 
         return userProfile;
-      } else {
+      } else if (sellerType?.sellerType === "STORE") {
         const storeProfile = await prisma.seller.findUnique({
           where: { id },
           include: {
@@ -201,6 +203,19 @@ export const UserService = {
           },
         });
         return storeProfile;
+      } else if (sellerType?.sellerType === "SERVICE") {
+        const serviceProfile = await prisma.seller.findUnique({
+          where: { id },
+          include: {
+            serviceProfile: true,
+            country: true,
+            region: true,
+            city: true,
+            county: true,
+            sellerCategory: true,
+          },
+        });
+        return serviceProfile;
       }
     } catch (error) {
       console.error("Error al obtener usuario actual:", error);
@@ -306,6 +321,17 @@ export const UserService = {
           },
         });
 
+        // Handle birthday field conversion from date string to DateTime
+        let processedBirthday = profileData.birthday;
+        if (processedBirthday && typeof processedBirthday === "string") {
+          // Parse date string and create a proper DateTime with current timezone
+          const date = new Date(processedBirthday);
+          // Set time to current time instead of midnight UTC to match creation pattern
+          const now = new Date();
+          date.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+          processedBirthday = date;
+        }
+
         await tx.personProfile.create({
           data: {
             sellerId: user.id,
@@ -313,7 +339,7 @@ export const UserService = {
             lastName: lastName || null,
             displayName: profileData.displayName || null,
             bio: profileData.bio || null,
-            birthday: profileData.birthday || null,
+            birthday: processedBirthday || null,
             allowExchanges: profileData.allowExchanges ?? true,
           },
         });
@@ -436,6 +462,10 @@ export const UserService = {
   // Profile updates
   updateUser: async ({ userId, input }: { userId: string; input: any }) => {
     try {
+      if (!userId) {
+        throw new ErrorService.BadRequestError("User ID is required");
+      }
+
       await prisma.seller.update({
         where: { id: userId },
         data: input,
@@ -444,12 +474,26 @@ export const UserService = {
       return await UserService.getUserById({ id: userId });
     } catch (error) {
       console.error("Error al actualizar usuario:", error);
+      if (error instanceof ErrorService.BadRequestError) {
+        throw error;
+      }
       throw new ErrorService.InternalServerError("Error al actualizar usuario");
     }
   },
 
   updatePersonProfile: async ({ userId, input }: { userId: string; input: any }) => {
     try {
+      // Handle birthday field conversion from date string to DateTime
+      const processedInput = { ...input };
+      if (processedInput.birthday && typeof processedInput.birthday === "string") {
+        // Parse date string and create a proper DateTime with current timezone
+        const date = new Date(processedInput.birthday);
+        // Set time to current time instead of midnight UTC to match creation pattern
+        const now = new Date();
+        date.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+        processedInput.birthday = date;
+      }
+
       await prisma.personProfile.update({
         where: { sellerId: userId },
         data: input,

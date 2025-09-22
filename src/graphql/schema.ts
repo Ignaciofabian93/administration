@@ -14,7 +14,9 @@ export const typeDefs = gql`
     WHATSAPP
     PHONE
     INSTAGRAM
-    ALL
+    FACEBOOK
+    WEBSITE
+    TIKTOK
   }
 
   enum SellerType {

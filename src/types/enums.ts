@@ -36,7 +36,7 @@ export type Badge =
   | "DELIVERED_TO_HOME"
   | "IN_HOUSE_PICKUP"
   | "IN_MID_POINT_PICKUP";
-export type ContactMethod = "EMAIL" | "WHATSAPP" | "ALL";
+export type ContactMethod = "EMAIL" | "WHATSAPP" | "PHONE" | "INSTAGRAM" | "FACEBOOK" | "WEBSITE" | "TIKTOK";
 export type WeightUnit = "KG" | "LB" | "OZ" | "G";
 export type ProductSize = "XS" | "S" | "M" | "L" | "XL";
 export type ExchangeStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "COMPLETED" | "CANCELLED";

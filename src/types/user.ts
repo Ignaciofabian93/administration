@@ -93,7 +93,7 @@ export type RegisterStoreInput = {
   email: string;
   password: string;
   businessName: string;
-  displayName?: string;
+  displayName: string;
   description?: string;
   businessType?: string;
   taxId?: string;
@@ -110,4 +110,24 @@ export type RegisterStoreInput = {
   minOrderAmount?: number;
   shippingPolicy?: string;
   returnPolicy?: string;
+};
+
+export type RegisterServiceInput = {
+  email: string;
+  password: string;
+  businessName: string;
+  displayName: string;
+  description?: string;
+  businessType?: string;
+  taxId?: string;
+  businessRegistration?: string;
+  address?: string;
+  cityId?: number;
+  countyId?: number;
+  regionId?: number;
+  countryId?: number;
+  phone?: string;
+  website?: string;
+  preferredContactMethod?: ContactMethod;
+  allowExchanges?: boolean;
 };

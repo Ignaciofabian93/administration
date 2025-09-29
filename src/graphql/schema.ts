@@ -154,15 +154,15 @@ export const typeDefs = gql`
   input RegisterStoreInput {
     email: String!
     password: String!
-    businessName: String!
-    displayName: String
+    businessName: String
+    displayName: String!
   }
 
   input RegisterServiceInput {
     email: String!
     password: String!
-    businessName: String!
-    displayName: String
+    businessName: String
+    displayName: String!
   }
 
   input UpdatePersonProfileInput {

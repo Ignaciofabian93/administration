@@ -1,6 +1,6 @@
 import { UserService } from "../services/users";
 import { type SellerType } from "../../types/enums";
-import { type RegisterPersonInput, type RegisterStoreInput } from "../../types/user";
+import { type RegisterServiceInput, type RegisterPersonInput, type RegisterStoreInput } from "../../types/user";
 
 export const UserResolver = {
   Query: {
@@ -23,7 +23,11 @@ export const UserResolver = {
     ) => UserService.getUsers(args),
     user: (_parent: unknown, args: { id: string }) => UserService.getUserById(args),
     userByEmail: (_parent: unknown, args: { email: string }) => UserService.getUserByEmail(args),
-    me: (_parent: unknown, _args: unknown, context: { userId: string }) => UserService.getMe({ id: context.userId }),
+    me: (_parent: unknown, _args: unknown, context: { userId: string }) => {
+      console.log("context in me resolver:", context);
+
+      return UserService.getMe({ userId: context.userId });
+    },
 
     // Store-specific queries
     stores: (
@@ -64,7 +68,8 @@ export const UserResolver = {
     // Registration
     registerPerson: (_parent: unknown, args: { input: RegisterPersonInput }) => UserService.registerPerson(args.input),
     registerStore: (_parent: unknown, args: { input: RegisterStoreInput }) => UserService.registerStore(args.input),
-    // registerService: (_parent: unknown, args: { input: any }) => UserService.registerService(args.input), // TODO: Implement registerService
+    registerService: (_parent: unknown, args: { input: RegisterServiceInput }) =>
+      UserService.registerService(args.input),
 
     // Password management
     updatePassword: (

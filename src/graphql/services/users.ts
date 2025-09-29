@@ -169,16 +169,18 @@ export const UserService = {
     }
   },
 
-  getMe: async ({ id }: { id: string }) => {
+  getMe: async ({ userId }: { userId: string }) => {
+    console.log("ID:: ", userId);
+
     try {
       const sellerType = await prisma.seller.findUnique({
-        where: { id },
+        where: { id: userId },
         select: { sellerType: true },
       });
 
       if (sellerType?.sellerType === "PERSON") {
         const userProfile = await prisma.seller.findUnique({
-          where: { id },
+          where: { id: userId },
           include: {
             personProfile: true,
             country: true,
@@ -192,7 +194,7 @@ export const UserService = {
         return userProfile;
       } else if (sellerType?.sellerType === "STORE") {
         const storeProfile = await prisma.seller.findUnique({
-          where: { id },
+          where: { id: userId },
           include: {
             storeProfile: true,
             country: true,
@@ -205,7 +207,7 @@ export const UserService = {
         return storeProfile;
       } else if (sellerType?.sellerType === "SERVICE") {
         const serviceProfile = await prisma.seller.findUnique({
-          where: { id },
+          where: { id: userId },
           include: {
             serviceProfile: true,
             country: true,
@@ -360,7 +362,7 @@ export const UserService = {
 
   registerStore: async (input: RegisterStoreInput) => {
     try {
-      const { email, password, businessName, ...profileData } = input;
+      const { email, password, businessName, displayName, ...profileData } = input;
 
       // Check if user already exists
       const existingUser = await prisma.seller.findUnique({
@@ -398,7 +400,7 @@ export const UserService = {
           data: {
             sellerId: user.id,
             businessName,
-            displayName: profileData.displayName || null,
+            displayName,
             description: profileData.description || null,
             businessType: profileData.businessType || null,
             taxId: profileData.taxId || null,
@@ -414,13 +416,77 @@ export const UserService = {
       });
 
       // Send welcome email
-      await sendWelcomeEmail(email.toLowerCase(), "", businessName);
+      await sendWelcomeEmail(email.toLowerCase(), "", displayName);
 
       return await UserService.getUserById({ id: result.id });
     } catch (error) {
       console.error("Error al registrar tienda:", error);
       if (error instanceof ErrorService.BadRequestError) throw error;
       throw new ErrorService.InternalServerError("Error al registrar tienda");
+    }
+  },
+
+  registerService: async (input: RegisterStoreInput) => {
+    try {
+      const { email, password, businessName, displayName, ...profileData } = input;
+
+      // Check if user already exists
+      const existingUser = await prisma.seller.findUnique({
+        where: { email: email.toLowerCase() },
+      });
+
+      if (existingUser) {
+        throw new ErrorService.BadRequestError("Ya existe un usuario con este email");
+      }
+
+      // Hash password
+      const salt = await genSalt(12);
+      const hashedPassword = await hash(password, salt);
+
+      // Create user and profile in transaction
+      const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        const user = await tx.seller.create({
+          data: {
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            sellerType: "SERVICE",
+            address: profileData.address || "",
+            phone: profileData.phone || "",
+            website: profileData.website || null,
+            preferredContactMethod: profileData.preferredContactMethod || "WHATSAPP",
+            cityId: profileData.cityId || null,
+            countyId: profileData.countyId || null,
+            regionId: profileData.regionId || null,
+            countryId: profileData.countryId || null,
+            updatedAt: new Date(),
+          },
+        });
+
+        await tx.serviceProfile.create({
+          data: {
+            sellerId: user.id,
+            businessName,
+            displayName,
+            description: profileData.description || null,
+            businessType: profileData.businessType || null,
+            taxId: profileData.taxId || null,
+            businessRegistration: profileData.businessRegistration || null,
+            allowExchanges: profileData.allowExchanges ?? false,
+            minOrderAmount: profileData.minOrderAmount || null,
+          },
+        });
+
+        return user;
+      });
+
+      // Send welcome email
+      await sendWelcomeEmail(email.toLowerCase(), "", displayName);
+
+      return await UserService.getUserById({ id: result.id });
+    } catch (error) {
+      console.error("Error al registrar servicio:", error);
+      if (error instanceof ErrorService.BadRequestError) throw error;
+      throw new ErrorService.InternalServerError("Error al registrar servicio");
     }
   },
 

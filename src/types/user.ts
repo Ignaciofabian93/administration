@@ -70,6 +70,21 @@ export type Session = {
   sellerId: string;
 };
 
+export enum AdminRole {
+  SUPER_ADMIN = "SUPER_ADMIN",
+  MODERATOR = "MODERATOR",
+  CONTENT_MANAGER = "CONTENT_MANAGER",
+  SUPPORT = "SUPPORT",
+}
+
+export type RegisterAdminInput = {
+  email: string;
+  name: string;
+  password: string;
+  lastName: string;
+  role: AdminRole;
+};
+
 export type RegisterPersonInput = {
   email: string;
   password: string;

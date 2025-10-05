@@ -8,6 +8,7 @@ import {
   type RegisterStoreInput,
   type PersonProfile,
   type StoreProfile,
+  RegisterAdminInput,
 } from "../../types/user";
 import { type City, type County, type Region, type Country } from "../../types/location";
 import { type SellerType, type ContactMethod, type AccountType } from "../../types/enums";
@@ -283,6 +284,43 @@ export const UserService = {
     } catch (error) {
       console.error("Error al obtener categoría de usuario:", error);
       throw new ErrorService.InternalServerError("Error al obtener categoría de usuario");
+    }
+  },
+
+  registerAdmin: async (input: RegisterAdminInput) => {
+    try {
+      const { email, name, password, lastName, role } = input;
+      // Check if user already exists
+      const existingUser = await prisma.admin.findUnique({
+        where: { email: email.toLowerCase() },
+      });
+
+      if (existingUser) {
+        throw new ErrorService.BadRequestError("Ya existe un usuario con este email");
+      }
+
+      // Hash password
+      const salt = await genSalt(12);
+      const hashedPassword = await hash(password, salt);
+
+      const newAdmin = await prisma.admin.create({
+        data: {
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          name,
+          lastName,
+          role,
+        },
+      });
+
+      if (!newAdmin) {
+        throw new ErrorService.InternalServerError("Error al crear el administrador");
+      }
+
+      return newAdmin;
+    } catch (error) {
+      console.error("Error al registrar administrador:", error);
+      throw new ErrorService.InternalServerError("Error al registrar administrador");
     }
   },
 

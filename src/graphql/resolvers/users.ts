@@ -1,6 +1,11 @@
 import { UserService } from "../services/users";
 import { type SellerType } from "../../types/enums";
-import { type RegisterServiceInput, type RegisterPersonInput, type RegisterStoreInput } from "../../types/user";
+import {
+  type RegisterServiceInput,
+  type RegisterPersonInput,
+  type RegisterStoreInput,
+  RegisterAdminInput,
+} from "../../types/user";
 
 export const UserResolver = {
   Query: {
@@ -66,6 +71,7 @@ export const UserResolver = {
 
   Mutation: {
     // Registration
+    registerAdmin: (_parent: unknown, args: { input: RegisterAdminInput }) => UserService.registerAdmin(args.input),
     registerPerson: (_parent: unknown, args: { input: RegisterPersonInput }) => UserService.registerPerson(args.input),
     registerStore: (_parent: unknown, args: { input: RegisterStoreInput }) => UserService.registerStore(args.input),
     registerService: (_parent: unknown, args: { input: RegisterServiceInput }) =>

@@ -25,6 +25,13 @@ export const typeDefs = gql`
     SERVICE
   }
 
+  enum AdminRole {
+    SUPER_ADMIN
+    MODERATOR
+    CONTENT_MANAGER
+    SUPPORT
+  }
+
   type UserCategory {
     id: ID!
     name: String!
@@ -121,6 +128,14 @@ export const typeDefs = gql`
 
   union Profile = PersonProfile | StoreProfile | ServiceProfile
 
+  type Admin @key(fields: "id") {
+    id: ID!
+    email: String!
+    name: String!
+    lastName: String!
+    role: AdminRole!
+  }
+
   type User @key(fields: "id") {
     id: ID!
     email: String!
@@ -142,6 +157,14 @@ export const typeDefs = gql`
     country: Country
     userCategory: UserCategory
     profile: Profile
+  }
+
+  input RegisterAdminInput {
+    email: String!
+    name: String!
+    password: String!
+    lastName: String!
+    role: AdminRole!
   }
 
   input RegisterPersonInput {
@@ -255,6 +278,7 @@ export const typeDefs = gql`
 
   extend type Mutation {
     # Registration
+    registerAdmin(input: RegisterAdminInput!): Admin!
     registerPerson(input: RegisterPersonInput!): User!
     registerStore(input: RegisterStoreInput!): User!
     registerService(input: RegisterServiceInput!): User!

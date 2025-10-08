@@ -10,4 +10,7 @@ export const resolvers = {
     ...PlatformAdminResolver.Mutation,
     ...BusinessAdminResolver.Mutation,
   },
+  Admin: {
+    ...PlatformAdminResolver.Admin,
+  },
 };

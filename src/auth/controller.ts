@@ -28,8 +28,15 @@ const getCookieNames = (userType: UserType): CookieNames => {
 
 // Helper function to generate tokens
 const generateTokens = (userId: string) => {
-  const token = jwt.sign({ userId }, process.env.JWT_SECRET as string, { expiresIn: "15min" });
-  const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET as string, { expiresIn: "7d" });
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined in environment variables");
+  }
+  if (!process.env.JWT_REFRESH_SECRET) {
+    throw new Error("JWT_REFRESH_SECRET is not defined in environment variables");
+  }
+
+  const token = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "15min" });
+  const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
   return { token, refreshToken };
 };
 
@@ -57,25 +64,42 @@ const handleLogin = async (
   userType: UserType,
   findUser: (email: string) => Promise<{ id: string; password: string } | null>,
 ) => {
-  const { email, password } = req.body;
-  const formattedEmail = email.toLowerCase();
+  try {
+    const { email, password } = req.body;
 
-  const user = await findUser(formattedEmail);
-  if (!user) {
-    res.status(400).json({ error: "No se encontró al usuario" });
-    return;
+    // Validate input
+    if (!email || !password) {
+      res.status(400).json({ error: "Email y contraseña son requeridos" });
+      return;
+    }
+
+    console.log(`Login attempt for ${userType}:`, email);
+
+    const formattedEmail = email.toLowerCase();
+
+    const user = await findUser(formattedEmail);
+    if (!user) {
+      console.log(`User not found: ${formattedEmail}`);
+      res.status(400).json({ error: "No se encontró al usuario" });
+      return;
+    }
+
+    const valid = await compare(password, user.password);
+    if (!valid) {
+      console.log(`Invalid password for: ${formattedEmail}`);
+      res.status(400).json({ message: "Credenciales inválidas" });
+      return;
+    }
+
+    const { token, refreshToken } = generateTokens(user.id);
+    setAuthCookies(res, token, refreshToken, userType);
+
+    console.log(`Login successful for ${userType}: ${formattedEmail}`);
+    res.json({ token, message: "Inicio de sesión exitoso" });
+  } catch (error) {
+    console.error(`Login error for ${userType}:`, error);
+    res.status(500).json({ error: "Error al procesar el inicio de sesión" });
   }
-
-  const valid = await compare(password, user.password);
-  if (!valid) {
-    res.status(400).json({ message: "Credenciales inválidas" });
-    return;
-  }
-
-  const { token, refreshToken } = generateTokens(user.id);
-  setAuthCookies(res, token, refreshToken, userType);
-
-  res.json({ token, message: "Inicio de sesión exitoso" });
 };
 
 // Admin login

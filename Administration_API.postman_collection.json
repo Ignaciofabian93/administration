@@ -1,0 +1,322 @@
+{
+  "info": {
+    "name": "Administration API",
+    "description": "REST Auth and GraphQL API for Administration Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth (REST)",
+      "item": [
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"your-password\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/authAdmin",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "authAdmin"]
+            },
+            "description": "Login as admin. Returns JWT token and sets cookies (x-o-token, x-o-refresh-token)"
+          }
+        },
+        {
+          "name": "Seller Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"seller@example.com\",\n  \"password\": \"your-password\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/auth",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "auth"]
+            },
+            "description": "Login as seller. Returns JWT token and sets cookies (token, refreshToken)"
+          }
+        },
+        {
+          "name": "Refresh Admin Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refreshAdmin",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refreshAdmin"]
+            },
+            "description": "Refresh admin access token using refresh token from cookies"
+          }
+        },
+        {
+          "name": "Refresh Seller Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Refresh seller access token using refresh token from cookies"
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL Queries",
+      "item": [
+        {
+          "name": "Get My Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetMyData { getMyData { id name email role permissions city { city } country { country } } }\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "description": "Get current admin user data. Requires admin login first."
+          }
+        },
+        {
+          "name": "Get Countries",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetCountries { getCountries { id country } }\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "description": "Get all countries"
+          }
+        },
+        {
+          "name": "Get Regions by Country",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetRegions($countryId: ID!) { getRegions(countryId: $countryId) { id region } }\",\n  \"variables\": {\n    \"countryId\": \"1\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "description": "Get regions for a specific country"
+          }
+        },
+        {
+          "name": "Get All Admins",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetAdmins($limit: Int, $isActive: Boolean) { getAdmins(limit: $limit, isActive: $isActive) { id name email role adminType isActive createdAt } }\",\n  \"variables\": {\n    \"limit\": 10,\n    \"isActive\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "description": "Get all admins with optional filters"
+          }
+        },
+        {
+          "name": "Get Specific Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetAdmin($id: ID!) { getAdmin(id: $id) { id name email role permissions activityLogs { action createdAt } } }\",\n  \"variables\": {\n    \"id\": \"admin-id-here\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "description": "Get a specific admin by ID"
+          }
+        },
+        {
+          "name": "Get Departments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetDepartments { getDepartments { id name description } }\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "description": "Get all departments"
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL Mutations",
+      "item": [
+        {
+          "name": "Create Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation CreateAdmin($input: RegisterAdminInput!) { createAdmin(input: $input) { id email name role } }\",\n  \"variables\": {\n    \"input\": {\n      \"email\": \"newadmin@example.com\",\n      \"name\": \"John\",\n      \"password\": \"SecurePassword123!\",\n      \"lastName\": \"Doe\",\n      \"role\": \"MODERATOR\",\n      \"adminType\": \"PLATFORM\",\n      \"permissions\": [\"MANAGE_PRODUCTS\", \"APPROVE_PRODUCTS\"]\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "description": "Create a new admin user"
+          }
+        },
+        {
+          "name": "Update Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation UpdateAdmin($adminId: ID!, $name: String, $role: AdminRole, $isActive: Boolean) { updateAdmin(adminId: $adminId, name: $name, role: $role, isActive: $isActive) { id name role isActive } }\",\n  \"variables\": {\n    \"adminId\": \"admin-id-here\",\n    \"name\": \"Updated Name\",\n    \"role\": \"CONTENT_MANAGER\",\n    \"isActive\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "description": "Update an existing admin"
+          }
+        },
+        {
+          "name": "Delete Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation DeleteAdmin($adminId: ID!) { deleteAdmin(adminId: $adminId) }\",\n  \"variables\": {\n    \"adminId\": \"admin-id-here\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "description": "Delete an admin user"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        },
+        "description": "Check if the server is running"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:6000",
+      "type": "string"
+    }
+  ]
+}

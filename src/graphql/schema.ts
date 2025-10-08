@@ -569,6 +569,16 @@ export const typeDefs = gql`
     twoFactorAuth: Boolean
   }
 
+  input CreateAdminInput {
+    email: String!
+    password: String!
+    name: String!
+    lastName: String
+    adminType: AdminType!
+    role: AdminRole!
+    permissions: [AdminPermission!]
+  }
+
   type Query {
     # PLATFORM ADMIN QUERIES
     # Location queries
@@ -589,6 +599,8 @@ export const typeDefs = gql`
     getAdmins(adminType: AdminType, role: AdminRole, isActive: Boolean, limit: Int, offset: Int): [Admin!]!
     getAdmin(id: ID!): Admin
     getMyData: Admin
+
+    createAdmin(input: CreateAdminInput!): Admin
 
     # BUSINESS ADMIN QUERIES
   }

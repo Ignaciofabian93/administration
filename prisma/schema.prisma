@@ -8,20 +8,45 @@ datasource db {
 }
 
 model Admin {
-  id        String     @id  @default(uuid())
-  email     String     @unique
-  password  String
-  name      String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  lastName  String?
-  role      AdminRole  @default(MODERATOR)
-  posts     BlogPost[]
+  id               String             @id @default(uuid())
+  email            String             @unique
+  password         String
+  name             String
+  lastName         String?
+  adminType        AdminType          @default(PLATFORM)
+  role             AdminRole          @default(MODERATOR)
+  permissions      AdminPermission[]
+  sellerId         String?
+  isActive         Boolean            @default(true)
+  isEmailVerified  Boolean            @default(false)
+  accountLocked    Boolean            @default(false)
+  loginAttempts    Int                @default(0)
+  lastLoginAt      DateTime?
+  lastLoginIp      String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  cityId           Int?
+  countryId        Int?
+  countyId         Int?
+  regionId         Int?
+  City             City?              @relation(fields: [cityId], references: [id])
+  Country          Country?           @relation(fields: [countryId], references: [id])
+  County           County?            @relation(fields: [countyId], references: [id])
+  Region           Region?            @relation(fields: [regionId], references: [id])
+  Seller           Seller?            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  AdminActivityLog AdminActivityLog[]
+  posts            BlogPost[]
+
+  @@index([adminType])
+  @@index([email])
+  @@index([isActive])
+  @@index([sellerId])
 }
 
 model Country {
   id      Int      @id @default(autoincrement())
   country String
+  Admin   Admin[]
   regions Region[]
   sellers Seller[]
 }
@@ -30,6 +55,7 @@ model Region {
   id        Int      @id @default(autoincrement())
   region    String
   countryId Int
+  Admin     Admin[]
   cities    City[]
   country   Country  @relation(fields: [countryId], references: [id])
   sellers   Seller[]
@@ -39,6 +65,7 @@ model City {
   id       Int      @id @default(autoincrement())
   city     String
   regionId Int
+  Admin    Admin[]
   region   Region   @relation(fields: [regionId], references: [id])
   counties County[]
   sellers  Seller[]
@@ -48,6 +75,7 @@ model County {
   id      Int      @id @default(autoincrement())
   county  String
   cityId  Int
+  Admin   Admin[]
   city    City     @relation(fields: [cityId], references: [id])
   sellers Seller[]
 }
@@ -335,36 +363,32 @@ model Notification {
 }
 
 model Payment {
-  id              Int                   @id @default(autoincrement())
+  id              Int                    @id @default(autoincrement())
   orderId         Int?
   quotationId     Int?
   amount          Float
-  currency        String                @default("USD")
-  status          PaymentStatus         @default(PENDING)
-  paymentMethod   PaymentMethod
-  paymentProvider String?
-  externalId      String?               @unique
+  currency        String                 @default("CLP")
+  status          PaymentStatus          @default(PENDING)
+  paymentProvider ChileanPaymentProvider
+  externalId      String?                @unique
+  externalToken   String?
   description     String?
-  fees            Float?                @default(0)
+  fees            Float?                 @default(0)
   netAmount       Float?
   payerId         String
   receiverId      String
   failureReason   String?
   metadata        Json?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
   processedAt     DateTime?
   refundedAt      DateTime?
-  bankMethodId    Int?
-  cardMethodId    Int?
-  chileanConfigId Int?
-  bankMethod      PaymentMethodBank?    @relation("BankPaymentMethodUsed", fields: [bankMethodId], references: [id])
-  cardMethod      PaymentMethodCard?    @relation("PaymentMethodUsed", fields: [cardMethodId], references: [id])
-  chileanConfig   ChileanPaymentConfig? @relation("ChileanPaymentConfig", fields: [chileanConfigId], references: [id])
-  order           Order?                @relation(fields: [orderId], references: [id])
-  payer           Seller                @relation("PaymentPayer", fields: [payerId], references: [id])
-  quotation       Quotation?            @relation(fields: [quotationId], references: [id])
-  receiver        Seller                @relation("PaymentReceiver", fields: [receiverId], references: [id])
+  chileanConfigId Int
+  chileanConfig   ChileanPaymentConfig   @relation("ChileanPaymentConfig", fields: [chileanConfigId], references: [id])
+  order           Order?                 @relation(fields: [orderId], references: [id])
+  payer           Seller                 @relation("PaymentPayer", fields: [payerId], references: [id])
+  quotation       Quotation?             @relation(fields: [quotationId], references: [id])
+  receiver        Seller                 @relation("PaymentReceiver", fields: [receiverId], references: [id])
   refunds         PaymentRefund[]
   transactions    PaymentTransaction[]
   webhooks        PaymentWebhook[]
@@ -375,6 +399,8 @@ model Payment {
   @@index([payerId])
   @@index([receiverId])
   @@index([createdAt])
+  @@index([externalId])
+  @@index([paymentProvider])
 }
 
 model PaymentRefund {
@@ -405,21 +431,22 @@ model NotificationTemplate {
 }
 
 model PaymentWebhook {
-  id              Int       @id @default(autoincrement())
+  id              Int                    @id @default(autoincrement())
   paymentId       Int?
-  provider        String
+  provider        ChileanPaymentProvider
   eventType       String
   externalId      String
   payload         Json
-  processed       Boolean   @default(false)
+  processed       Boolean                @default(false)
   processingError String?
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime               @default(now())
   processedAt     DateTime?
-  payment         Payment?  @relation(fields: [paymentId], references: [id])
+  payment         Payment?               @relation(fields: [paymentId], references: [id])
 
   @@index([paymentId])
   @@index([provider])
   @@index([processed])
+  @@index([externalId])
 }
 
 model PaymentTransaction {
@@ -439,68 +466,22 @@ model PaymentTransaction {
   @@index([createdAt])
 }
 
-model PaymentMethodCard {
-  id             Int       @id @default(autoincrement())
-  sellerId       String
-  providerToken  String
-  provider       String
-  cardLast4      String
-  cardBrand      String
-  cardType       CardType  @default(CREDIT)
-  expiryMonth    Int
-  expiryYear     Int
-  cardholderName String?
-  isDefault      Boolean   @default(false)
-  isActive       Boolean   @default(true)
-  billingAddress Json?
-  fingerprint    String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  payments       Payment[] @relation("PaymentMethodUsed")
-  seller         Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-
-  @@unique([sellerId, providerToken])
-  @@index([sellerId])
-  @@index([provider])
-  @@index([isDefault])
-}
-
-model PaymentMethodBank {
-  id                Int             @id @default(autoincrement())
-  sellerId          String
-  provider          String
-  providerToken     String
-  accountLast4      String
-  bankName          String?
-  accountType       BankAccountType @default(CHECKING)
-  accountHolderName String?
-  isDefault         Boolean         @default(false)
-  isActive          Boolean         @default(true)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  payments          Payment[]       @relation("BankPaymentMethodUsed")
-  seller            Seller          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-
-  @@unique([sellerId, providerToken])
-  @@index([sellerId])
-}
-
 model ChileanPaymentConfig {
-  id          Int                @id @default(autoincrement())
+  id          Int                    @id @default(autoincrement())
   sellerId    String
-  provider    String
+  provider    ChileanPaymentProvider
   merchantId  String?
   apiKey      String?
   secretKey   String?
-  environment PaymentEnvironment @default(SANDBOX)
-  isActive    Boolean            @default(true)
+  environment PaymentEnvironment     @default(SANDBOX)
+  isActive    Boolean                @default(true)
   webhookUrl  String?
   returnUrl   String?
   cancelUrl   String?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  seller      Seller             @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  payments    Payment[]          @relation("ChileanPaymentConfig")
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  seller      Seller                 @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  payments    Payment[]              @relation("ChileanPaymentConfig")
 
   @@unique([sellerId, provider])
   @@index([sellerId])
@@ -530,6 +511,8 @@ model Seller {
   accountType            AccountType?           @default(FREE)
   points                 Int?                   @default(0)
   sellerCategoryId       Int?
+  Admin                  Admin[]
+  BusinessProfile        BusinessProfile?
   receivedChats          Chat[]                 @relation("ChatReceiver")
   sentChats              Chat[]                 @relation("ChatSender")
   chileanPaymentConfigs  ChileanPaymentConfig[]
@@ -542,8 +525,6 @@ model Seller {
   orders                 Order[]
   paymentsAsPayer        Payment[]              @relation("PaymentPayer")
   paymentsAsReceiver     Payment[]              @relation("PaymentReceiver")
-  paymentBanks           PaymentMethodBank[]
-  paymentCards           PaymentMethodCard[]
   personProfile          PersonProfile?
   products               Product[]
   productComments        ProductComment[]
@@ -557,9 +538,7 @@ model Seller {
   sellerCategory         SellerCategory?        @relation(fields: [sellerCategoryId], references: [id])
   preferences            SellerPreferences?
   services               Service[]
-  serviceProfile         ServiceProfile?
   serviceReviews         ServiceReview[]        @relation("ServiceReviews")
-  storeProfile           StoreProfile?
   stories                Story[]
   transactions           Transaction[]
 
@@ -597,50 +576,6 @@ model PersonProfile {
   coverImage     String?
   allowExchanges Boolean   @default(true)
   seller         Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-}
-
-model StoreProfile {
-  id                   String  @id @default(uuid())
-  sellerId             String  @unique
-  businessName         String?
-  displayName          String?
-  description          String?
-  logo                 String?
-  coverImage           String?
-  businessType         String?
-  taxId                String?
-  businessRegistration String?
-  allowExchanges       Boolean @default(false)
-  minOrderAmount       Int?
-  shippingPolicy       String?
-  returnPolicy         String?
-  businessHours        Json?
-  seller               Seller  @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-}
-
-model ServiceProfile {
-  id                   String   @id @default(uuid())
-  sellerId             String   @unique
-  businessName         String?
-  displayName          String?
-  description          String?
-  logo                 String?
-  coverImage           String?
-  businessType         String?
-  taxId                String?
-  businessRegistration String?
-  allowExchanges       Boolean  @default(false)
-  minOrderAmount       Int?
-  serviceArea          String?
-  serviceHours         Json?
-  yearsOfExperience    Int?
-  licenseNumber        String?
-  insuranceInfo        String?
-  certifications       String[]
-  emergencyService     Boolean  @default(false)
-  travelRadius         Int?
-  responsiveness       String?
-  seller               Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }
 
 model SellerCategory {
@@ -763,14 +698,74 @@ model CommunityComment {
   @@index([createdAt])
 }
 
-// ///////////////////////////////////////////////////////////////////////////////////////
-// ///////////////////////////////////////////////////////////////////////////////////////
+model AdminActivityLog {
+  id         Int      @id @default(autoincrement())
+  adminId    String
+  action     String
+  entityType String?
+  entityId   String?
+  changes    Json?
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  Admin      Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([action])
+  @@index([adminId])
+  @@index([createdAt])
+  @@index([entityType])
+}
+
+model BusinessProfile {
+  id                       String                      @id
+  sellerId                 String                      @unique
+  businessName             String
+  displayName              String?
+  description              String?
+  logo                     String?
+  coverImage               String?
+  businessType             BusinessType
+  legalBusinessName        String?
+  taxId                    String?                     @unique
+  businessActivity         String?
+  businessStartDate        DateTime?
+  legalRepresentative      String?
+  legalRepresentativeTaxId String?
+  formalizationStatus      BusinessFormalizationStatus @default(NOT_REQUIRED)
+  formalizationDeadline    DateTime?
+  formalizationNotes       String?
+  minOrderAmount           Int?
+  shippingPolicy           String?
+  returnPolicy             String?
+  serviceArea              String?
+  yearsOfExperience        Int?
+  licenseNumber            String?
+  insuranceInfo            String?
+  certifications           String[]
+  emergencyService         Boolean                     @default(false)
+  travelRadius             Int?
+  businessHours            Json?
+  taxDocuments             String[]
+  verificationDocuments    String[]
+  createdAt                DateTime                    @default(now())
+  updatedAt                DateTime
+  Seller                   Seller                      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([businessType])
+  @@index([formalizationStatus])
+  @@index([taxId])
+}
 
 enum AdminRole {
   SUPER_ADMIN
   MODERATOR
   CONTENT_MANAGER
   SUPPORT
+  BUSINESS_OWNER
+  BUSINESS_MANAGER
+  BUSINESS_ANALYST
+  BUSINESS_SUPPORT
 }
 
 enum AccountType {
@@ -871,8 +866,8 @@ enum ProductCondition {
 
 enum SellerType {
   PERSON
-  STORE
-  SERVICE
+  STARTUP
+  COMPANY
 }
 
 enum ServicePricing {
@@ -932,25 +927,7 @@ enum PaymentStatus {
   CANCELLED
   REFUNDED
   PARTIALLY_REFUNDED
-}
-
-enum PaymentMethod {
-  CREDIT_CARD
-  DEBIT_CARD
-  PAYPAL
-  BANK_TRANSFER
-  APPLE_PAY
-  GOOGLE_PAY
-  STRIPE
-  CASH_ON_DELIVERY
-  CRYPTOCURRENCY
-  KHIPU
-  WEBPAY
-  MERCADO_PAGO
-  TRANSBANK
-  FLOW
-  ONECLICK
-  REDCOMPRA
+  EXPIRED
 }
 
 enum RefundStatus {
@@ -959,18 +936,6 @@ enum RefundStatus {
   COMPLETED
   FAILED
   CANCELLED
-}
-
-enum CardType {
-  CREDIT
-  DEBIT
-  PREPAID
-}
-
-enum BankAccountType {
-  CHECKING
-  SAVINGS
-  BUSINESS
 }
 
 enum PaymentEnvironment {
@@ -993,4 +958,54 @@ enum BlogCategory {
   SUSTAINABLE_LIVING
   OTHER
   SECURITY
+}
+
+enum AdminPermission {
+  MANAGE_PRODUCTS
+  APPROVE_PRODUCTS
+  DELETE_PRODUCTS
+  WRITE_BLOG
+  PUBLISH_BLOG
+  DELETE_BLOG
+  MODERATE_CONTENT
+  MANAGE_USERS
+  BAN_USERS
+  VIEW_USER_DATA
+  MANAGE_ORDERS
+  PROCESS_REFUNDS
+  VIEW_TRANSACTIONS
+  VIEW_ANALYTICS
+  EXPORT_DATA
+  MANAGE_ADMINS
+  MANAGE_CATEGORIES
+  MANAGE_SETTINGS
+  VIEW_SYSTEM_LOGS
+  MANAGE_BUSINESS_PROFILE
+  MANAGE_BUSINESS_TEAM
+  VIEW_BUSINESS_ANALYTICS
+  MANAGE_BUSINESS_PRODUCTS
+  MANAGE_BUSINESS_ORDERS
+}
+
+enum AdminType {
+  PLATFORM
+  BUSINESS
+}
+
+enum BusinessFormalizationStatus {
+  NOT_REQUIRED
+  PENDING
+  IN_PROGRESS
+  FORMALIZED
+}
+
+enum BusinessType {
+  RETAIL
+  SERVICES
+  MIXED
+}
+
+enum ChileanPaymentProvider {
+  KHIPU
+  WEBPAY
 }

@@ -5,6 +5,7 @@ export type Context = {
   res: Response;
   token?: string;
   userId?: string;
+  adminId?: string;
 };
 
 export type ResolverFn<TParent = unknown, TArgs = Record<string, unknown>, TResult = unknown> = (

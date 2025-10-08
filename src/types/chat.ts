@@ -2,7 +2,7 @@ export type Match = {
   id: number;
   senderId: string;
   receiverId: string;
-  createdAt: string;
+  createdAt: Date;
   isMatched: boolean;
 };
 
@@ -10,9 +10,9 @@ export type Chat = {
   id: number;
   senderId: string;
   receiverId: string;
-  productId?: number;
+  productId?: number | null;
   isExchange: boolean;
-  createdAt: string;
+  createdAt: Date;
 };
 
 export type Message = {
@@ -20,5 +20,5 @@ export type Message = {
   chatId: number;
   senderId: string;
   content: string;
-  createdAt: string;
+  createdAt: Date;
 };

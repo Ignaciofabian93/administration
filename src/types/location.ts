@@ -6,17 +6,17 @@ export type Country = {
 export type Region = {
   id: number;
   region: string;
-  countryId?: number;
+  countryId: number;
 };
 
 export type City = {
   id: number;
   city: string;
-  regionId?: number;
+  regionId: number;
 };
 
 export type County = {
   id: number;
   county: string;
-  cityId?: number;
+  cityId: number;
 };

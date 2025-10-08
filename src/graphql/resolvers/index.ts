@@ -1,16 +1,13 @@
-import { UserResolver } from "./users";
+import { PlatformAdminResolver } from "./platform-admin";
+import { BusinessAdminResolver } from "./business-admin";
 
 export const resolvers = {
   Query: {
-    ...UserResolver.Query,
+    ...PlatformAdminResolver.Query,
+    ...BusinessAdminResolver.Query,
   },
   Mutation: {
-    ...UserResolver.Mutation,
-  },
-  User: {
-    ...UserResolver.User,
-  },
-  Profile: {
-    ...UserResolver.Profile,
+    ...PlatformAdminResolver.Mutation,
+    ...BusinessAdminResolver.Mutation,
   },
 };

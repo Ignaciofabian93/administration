@@ -1,6 +1,54 @@
-import { type AccountType, type ContactMethod, type SellerType } from "./enums";
+import {
+  type AccountType,
+  type ContactMethod,
+  type SellerType,
+  type AdminRole,
+  type AdminPermission,
+  type AdminType,
+  type BusinessType,
+  type BusinessFormalizationStatus,
+} from "./enums";
 
-export type User = {
+// Admin Types
+export type Admin = {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  lastName?: string | null;
+  adminType: AdminType;
+  role: AdminRole;
+  permissions: AdminPermission[];
+  sellerId?: string | null;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  accountLocked: boolean;
+  loginAttempts: number;
+  lastLoginAt?: Date | null;
+  lastLoginIp?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  cityId?: number | null;
+  countryId?: number | null;
+  countyId?: number | null;
+  regionId?: number | null;
+};
+
+export type AdminActivityLog = {
+  id: number;
+  adminId: string;
+  action: string;
+  entityType?: string | null;
+  entityId?: string | null;
+  changes?: any | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  metadata?: any | null;
+  createdAt: Date;
+};
+
+// Seller Types
+export type Seller = {
   id: string;
   email: string;
   password: string;
@@ -9,18 +57,32 @@ export type User = {
   isVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
-  address: string;
+  address?: string | null;
   cityId?: number | null;
   countryId?: number | null;
   countyId?: number | null;
   regionId?: number | null;
-  phone: string;
+  phone?: string | null;
   website?: string | null;
-  preferredContactMethod: ContactMethod;
-  socialMediaLinks?: any;
-  accountType: AccountType;
-  points: number;
-  userCategoryId?: number | null;
+  preferredContactMethod?: ContactMethod | null;
+  socialMediaLinks?: any | null;
+  accountType?: AccountType | null;
+  points?: number | null;
+  sellerCategoryId?: number | null;
+};
+
+export type SellerPreferences = {
+  id: number;
+  sellerId: string;
+  preferredLanguage?: string | null;
+  currency?: string | null;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  orderUpdates: boolean;
+  communityUpdates: boolean;
+  securityAlerts: boolean;
+  weeklySummary: boolean;
+  twoFactorAuth: boolean;
 };
 
 export type PersonProfile = {
@@ -36,7 +98,7 @@ export type PersonProfile = {
   allowExchanges: boolean;
 };
 
-export type StoreProfile = {
+export type BusinessProfile = {
   id: string;
   sellerId: string;
   businessName: string;
@@ -44,17 +106,34 @@ export type StoreProfile = {
   description?: string | null;
   logo?: string | null;
   coverImage?: string | null;
-  businessType?: string | null;
+  businessType: BusinessType;
+  legalBusinessName?: string | null;
   taxId?: string | null;
-  businessRegistration?: string | null;
-  allowExchanges: boolean;
+  businessActivity?: string | null;
+  businessStartDate?: Date | null;
+  legalRepresentative?: string | null;
+  legalRepresentativeTaxId?: string | null;
+  formalizationStatus: BusinessFormalizationStatus;
+  formalizationDeadline?: Date | null;
+  formalizationNotes?: string | null;
   minOrderAmount?: number | null;
   shippingPolicy?: string | null;
   returnPolicy?: string | null;
-  businessHours?: any;
+  serviceArea?: string | null;
+  yearsOfExperience?: number | null;
+  licenseNumber?: string | null;
+  insuranceInfo?: string | null;
+  certifications: string[];
+  emergencyService: boolean;
+  travelRadius?: number | null;
+  businessHours?: any | null;
+  taxDocuments: string[];
+  verificationDocuments: string[];
+  createdAt: Date;
+  updatedAt: Date;
 };
 
-export type UserCategory = {
+export type SellerCategory = {
   id: number;
   name: string;
   categoryDiscountAmount: number;
@@ -62,6 +141,7 @@ export type UserCategory = {
   level: number;
 };
 
+// Session Types
 export type Session = {
   id: string;
   token: string;
@@ -70,19 +150,20 @@ export type Session = {
   sellerId: string;
 };
 
-export enum AdminRole {
-  SUPER_ADMIN = "SUPER_ADMIN",
-  MODERATOR = "MODERATOR",
-  CONTENT_MANAGER = "CONTENT_MANAGER",
-  SUPPORT = "SUPPORT",
-}
-
+// Input Types for Registration
 export type RegisterAdminInput = {
   email: string;
   name: string;
   password: string;
-  lastName: string;
+  lastName?: string;
   role: AdminRole;
+  adminType?: AdminType;
+  permissions?: AdminPermission[];
+  sellerId?: string;
+  cityId?: number;
+  countryId?: number;
+  countyId?: number;
+  regionId?: number;
 };
 
 export type RegisterPersonInput = {
@@ -104,15 +185,16 @@ export type RegisterPersonInput = {
   allowExchanges?: boolean;
 };
 
-export type RegisterStoreInput = {
+export type RegisterBusinessInput = {
   email: string;
   password: string;
   businessName: string;
-  displayName: string;
+  displayName?: string;
   description?: string;
-  businessType?: string;
+  businessType: BusinessType;
+  legalBusinessName?: string;
   taxId?: string;
-  businessRegistration?: string;
+  businessActivity?: string;
   address?: string;
   cityId?: number;
   countyId?: number;
@@ -121,28 +203,14 @@ export type RegisterStoreInput = {
   phone?: string;
   website?: string;
   preferredContactMethod?: ContactMethod;
-  allowExchanges?: boolean;
   minOrderAmount?: number;
   shippingPolicy?: string;
   returnPolicy?: string;
-};
-
-export type RegisterServiceInput = {
-  email: string;
-  password: string;
-  businessName: string;
-  displayName: string;
-  description?: string;
-  businessType?: string;
-  taxId?: string;
-  businessRegistration?: string;
-  address?: string;
-  cityId?: number;
-  countyId?: number;
-  regionId?: number;
-  countryId?: number;
-  phone?: string;
-  website?: string;
-  preferredContactMethod?: ContactMethod;
-  allowExchanges?: boolean;
+  serviceArea?: string;
+  yearsOfExperience?: number;
+  licenseNumber?: string;
+  insuranceInfo?: string;
+  certifications?: string[];
+  emergencyService?: boolean;
+  travelRadius?: number;
 };

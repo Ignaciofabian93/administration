@@ -11,29 +11,34 @@ export type CreateAdminInput = {
   permissions: AdminPermission[];
 };
 
+export type PaginationInput = {
+  limit: number;
+  offset: number;
+};
+
 export const PlatformAdminResolver = {
   Query: {
     // Location queries
-    getCountries: (_parent: unknown, _args: unknown, context: { adminId: string }) =>
-      PlatformAdminService.getCountries({ adminId: context.adminId }),
+    getCountries: (_parent: unknown, _args: PaginationInput, context: { adminId: string }) =>
+      PlatformAdminService.getCountries({ adminId: context.adminId, ..._args }),
 
-    getRegions: (_parent: unknown, args: { countryId: number }, context: { adminId: string }) =>
-      PlatformAdminService.getRegionsByCountry({ adminId: context.adminId, countryId: args.countryId }),
+    getRegions: (_parent: unknown, _args: PaginationInput, context: { adminId: string }) =>
+      PlatformAdminService.getRegions({ adminId: context.adminId, ..._args }),
 
-    getRegionsByCountry: (_parent: unknown, args: { countryId: number }, context: { adminId: string }) =>
-      PlatformAdminService.getRegionsByCountry({ adminId: context.adminId, countryId: args.countryId }),
+    getRegionsByCountry: (_parent: unknown, _args: { countryId: number } & PaginationInput, context: { adminId: string }) =>
+      PlatformAdminService.getRegionsByCountry({ adminId: context.adminId, ..._args }),
 
-    getCities: (_parent: unknown, _args: unknown, context: { adminId: string }) =>
-      PlatformAdminService.getCities({ adminId: context.adminId }),
+    getCities: (_parent: unknown, _args: PaginationInput, context: { adminId: string }) =>
+      PlatformAdminService.getCities({ adminId: context.adminId, ..._args }),
 
-    getCitiesByRegion: (_parent: unknown, args: { regionId: number }, context: { adminId: string }) =>
-      PlatformAdminService.getCitiesByRegion({ adminId: context.adminId, regionId: args.regionId }),
+    getCitiesByRegion: (_parent: unknown, _args: { regionId: number } & PaginationInput, context: { adminId: string }) =>
+      PlatformAdminService.getCitiesByRegion({ adminId: context.adminId, ..._args }),
 
-    getCounties: (_parent: unknown, args: unknown, context: { adminId: string }) =>
-      PlatformAdminService.getCounties({ adminId: context.adminId }),
+    getCounties: (_parent: unknown, _args: PaginationInput, context: { adminId: string }) =>
+      PlatformAdminService.getCounties({ adminId: context.adminId, ..._args }),
 
-    getCountiesByCity: (_parent: unknown, args: { cityId: number }, context: { adminId: string }) =>
-      PlatformAdminService.getCountiesByCity({ adminId: context.adminId, cityId: args.cityId }),
+    getCountiesByCity: (_parent: unknown, _args: { cityId: number } & PaginationInput, context: { adminId: string }) =>
+      PlatformAdminService.getCountiesByCity({ adminId: context.adminId, ..._args }),
 
     // Admin queries
     getMyData: async (_parent: unknown, _args: unknown, context: { adminId?: string }) => {

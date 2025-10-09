@@ -582,12 +582,12 @@ export const typeDefs = gql`
   type Query {
     # PLATFORM ADMIN QUERIES
     # Location queries
-    getCountries: [Country!]!
-    getRegions(countryId: ID!): [Region!]!
+    getCountries(limit: Int, offset: Int): [Country!]!
+    getRegions(limit: Int, offset: Int): [Region!]!
     getRegionsByCountry(countryId: ID!): [Region!]!
-    getCities(regionId: ID!): [City!]!
+    getCities(limit: Int, offset: Int): [City!]!
     getCitiesByRegion(regionId: ID!): [City!]!
-    getCounties(cityId: ID!): [County!]!
+    getCounties(limit: Int, offset: Int): [County!]!
     getCountiesByCity(cityId: ID!): [County!]!
 
     # Department - Product queries

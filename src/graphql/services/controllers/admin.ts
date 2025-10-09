@@ -1,18 +1,44 @@
 import prisma from "../../../client/prisma";
 import { ErrorService } from "../../../errors/errors";
 import { genSalt, hash } from "bcrypt";
-import { CreateAdminInput } from "../../resolvers/platform-admin";
+import { CreateAdminInput } from "../../resolvers/admin";
 
 export const AdminService = {
-  getAdmins: async () => {
+  getAdmins: async ({
+    adminId,
+    adminType,
+    role,
+    isActive,
+    limit,
+    offset,
+  }: {
+    adminId: string;
+    adminType?: string;
+    role?: string;
+    isActive?: boolean;
+    limit?: number;
+    offset?: number;
+  }) => {
     try {
-      const admins = await prisma.admin.findMany();
+      const where: any = {};
+      if (adminType) where.adminType = adminType;
+      if (role) where.role = role;
+      if (isActive !== undefined) where.isActive = isActive;
 
-      if (!admins) {
-        throw new ErrorService.NotFoundError("No se encontraron administradores");
-      }
+      const admins = await prisma.admin.findMany({
+        where,
+        take: limit,
+        skip: offset,
+        include: {
+          Region: true,
+          Country: true,
+          City: true,
+          County: true,
+        },
+      });
 
-      return admins;
+      // Remove passwords from response
+      return admins.map(({ password, ...admin }) => admin);
     } catch (error) {
       throw new ErrorService.InternalServerError("Error al intentar obtener administradores");
     }

@@ -1,16 +1,40 @@
-import { PlatformAdminResolver } from "./platform-admin";
-import { BusinessAdminResolver } from "./business-admin";
+import { AdminResolver } from "./admin";
 
 export const resolvers = {
   Query: {
-    ...PlatformAdminResolver.Query,
-    ...BusinessAdminResolver.Query,
+    ...AdminResolver.Query,
   },
   Mutation: {
-    ...PlatformAdminResolver.Mutation,
-    ...BusinessAdminResolver.Mutation,
+    ...AdminResolver.Mutation,
   },
   Admin: {
-    ...PlatformAdminResolver.Admin,
+    ...AdminResolver.Admin,
+  },
+  Product: {
+    ...AdminResolver.Product,
+  },
+  BlogPost: {
+    ...AdminResolver.BlogPost,
+  },
+  CommunityPost: {
+    ...AdminResolver.CommunityPost,
+  },
+  CommunityComment: {
+    ...AdminResolver.CommunityComment,
+  },
+  Department: {
+    ...AdminResolver.Department,
+  },
+  DepartmentCategory: {
+    ...AdminResolver.DepartmentCategory,
+  },
+  ProductCategory: {
+    ...AdminResolver.ProductCategory,
+  },
+  ProductComment: {
+    ...AdminResolver.ProductComment,
+  },
+  ProductLike: {
+    ...AdminResolver.ProductLike,
   },
 };

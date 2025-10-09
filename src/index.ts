@@ -30,7 +30,6 @@ await server.start();
 
 // CORS configuration for your web app
 const allowedOrigins = [
-  "http://localhost:3000", // Local development
   "http://localhost:5000", // Vite default
   "https://studio.apollographql.com", // Apollo Studio
   // Add your production domain here
@@ -62,14 +61,6 @@ app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 app.use(cookieParser());
 
-// Debug middleware to log all requests
-app.use((req, res, next) => {
-  console.log(`\n📥 ${req.method} ${req.path}`);
-  console.log("Headers:", req.headers);
-  console.log("Body:", req.body);
-  next();
-});
-
 app.use("/session", auth);
 
 // GraphQL endpoint - simplified CORS as global CORS is already applied
@@ -89,7 +80,3 @@ const PORT = process.env.PORT || 4500;
 
 await new Promise<void>((resolve) => httpServer.listen({ port: PORT }, resolve));
 console.log(`\n🚀 Administration Server ready!`);
-console.log(`\n� GraphQL Endpoint:`);
-console.log(`   POST http://localhost:${PORT}/graphql`);
-console.log(`   🌐  Apollo Sandbox: http://localhost:${PORT}/graphql`);
-console.log(`   📊  Apollo Studio: https://studio.apollographql.com/sandbox/explorer?endpoint=http://localhost:${PORT}/graphql`);

@@ -1,5 +1,8 @@
 import { BlogCategory, type AdminPermission, type AdminRole, type AdminType } from "../../types";
 import { PlatformAdminService } from "../services/admin";
+import { BlogsResolver } from "./blogs";
+import { DepartmentsResolver } from "./departments";
+import { LocationResolver } from "./location";
 
 export type CreateAdminInput = {
   email: string;
@@ -19,69 +22,16 @@ export type PaginationInput = {
 export const AdminResolver = {
   Query: {
     // Location queries
-    getCountries: (_parent: unknown, _args: PaginationInput, context: { adminId: string }) =>
-      PlatformAdminService.getCountries({ adminId: context.adminId, ..._args }),
-
-    getRegions: (_parent: unknown, _args: PaginationInput, context: { adminId: string }) =>
-      PlatformAdminService.getRegions({ adminId: context.adminId, ..._args }),
-
-    getRegionsByCountry: (_parent: unknown, _args: { countryId: number } & PaginationInput, context: { adminId: string }) =>
-      PlatformAdminService.getRegionsByCountry({ adminId: context.adminId, ..._args }),
-
-    getCities: (_parent: unknown, _args: PaginationInput, context: { adminId: string }) =>
-      PlatformAdminService.getCities({ adminId: context.adminId, ..._args }),
-
-    getCitiesByRegion: (_parent: unknown, _args: { regionId: number } & PaginationInput, context: { adminId: string }) =>
-      PlatformAdminService.getCitiesByRegion({ adminId: context.adminId, ..._args }),
-
-    getCounties: (_parent: unknown, _args: PaginationInput, context: { adminId: string }) =>
-      PlatformAdminService.getCounties({ adminId: context.adminId, ..._args }),
-
-    getCountiesByCity: (_parent: unknown, _args: { cityId: number } & PaginationInput, context: { adminId: string }) =>
-      PlatformAdminService.getCountiesByCity({ adminId: context.adminId, ..._args }),
+    ...LocationResolver.Query,
 
     // Admin queries
     getMyData: async (_parent: unknown, _args: unknown, context: { adminId: string }) => PlatformAdminService.getMyData(context.adminId),
 
-    getAdmins: (
-      _parent: unknown,
-      _args: { adminType?: string; role?: string; isActive?: boolean; limit?: number; offset?: number },
-      context: { adminId: string },
-    ) => PlatformAdminService.getAdmins({ adminId: context.adminId, ..._args }),
-
-    getAdmin: (_parent: unknown, _args: { id: string }, context: { adminId: string }) => PlatformAdminService.getAdminById(_args.id),
-
     // Department queries
-    getDepartments: (_parent: unknown, _args: unknown, context: { adminId: string }) =>
-      PlatformAdminService.getDepartments({ adminId: context.adminId }),
-
-    getDepartment: (_parent: unknown, _args: { id: number }, context: { adminId: string }) =>
-      PlatformAdminService.getDepartment({ adminId: context.adminId, ..._args }),
-
-    getDepartmentCategories: (_parent: unknown, _args: { departmentId?: number }, context: { adminId: string }) =>
-      PlatformAdminService.getDepartmentCategories({ adminId: context.adminId, ..._args }),
-
-    getDepartmentCategory: (_parent: unknown, _args: { id: number }, context: { adminId: string }) =>
-      PlatformAdminService.getDepartmentCategory({ adminId: context.adminId, ..._args }),
-
-    getProductCategories: (_parent: unknown, _args: { departmentCategoryId?: number }, context: { adminId: string }) =>
-      PlatformAdminService.getProductCategories({ adminId: context.adminId, ..._args }),
-
-    getProductCategory: (_parent: unknown, _args: { id: number }, context: { adminId: string }) =>
-      PlatformAdminService.getProductCategory({ adminId: context.adminId, ..._args }),
+    ...DepartmentsResolver.Query,
 
     // Blog post queries
-    getBlogPosts: (
-      _parent: unknown,
-      _args: { category?: BlogCategory; isPublished?: boolean } & PaginationInput,
-      context: { adminId: string },
-    ) => PlatformAdminService.getBlogPosts({ adminId: context.adminId, ..._args }),
-
-    getBlogPost: (_parent: unknown, _args: { id: number }, context: { adminId: string }) =>
-      PlatformAdminService.getBlogPost({ adminId: context.adminId, ..._args }),
-
-    getBlogPostsByAuthor: (_parent: unknown, _args: { authorId: string; limit?: number; offset?: number }, context: { adminId: string }) =>
-      PlatformAdminService.getBlogPostsByAuthor({ adminId: context.adminId, ..._args }),
+    ...BlogsResolver.Query,
 
     // Product queries
     getProducts: (
@@ -148,20 +98,7 @@ export const AdminResolver = {
       PlatformAdminService.deleteAdmin(args.adminId),
 
     // Blog post management
-    createBlogPost: (_parent: unknown, args: { input: any }, context: { adminId: string }) =>
-      PlatformAdminService.createBlogPost(context.adminId, args.input),
-
-    updateBlogPost: (_parent: unknown, args: { id: number; input: any }, context: { adminId: string }) =>
-      PlatformAdminService.updateBlogPost(context.adminId, args.id, args.input),
-
-    deleteBlogPost: (_parent: unknown, args: { id: number }, context: { adminId: string }) =>
-      PlatformAdminService.deleteBlogPost(context.adminId, args.id),
-
-    publishBlogPost: (_parent: unknown, args: { id: number }, context: { adminId: string }) =>
-      PlatformAdminService.publishBlogPost(context.adminId, args.id),
-
-    unpublishBlogPost: (_parent: unknown, args: { id: number }, context: { adminId: string }) =>
-      PlatformAdminService.unpublishBlogPost(context.adminId, args.id),
+    ...BlogsResolver.Mutation,
 
     // Product management
     updateProduct: (_parent: unknown, args: { id: number; input: any }, context: { adminId: string }) =>

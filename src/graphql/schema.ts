@@ -459,7 +459,6 @@ export const typeDefs = gql`
     title: String!
     content: String!
     authorId: String!
-    tags: [String!]!
     isPublished: Boolean!
     publishedAt: DateTime
     createdAt: DateTime!
@@ -1084,7 +1083,6 @@ export const typeDefs = gql`
   input CreateBlogPostInput {
     title: String!
     content: String!
-    tags: [String!]!
     category: BlogCategory!
     isPublished: Boolean
   }

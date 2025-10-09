@@ -5,7 +5,6 @@ export type BlogPost = {
   title: string;
   content: string;
   authorId: string;
-  tags: string[];
   isPublished: boolean;
   publishedAt?: Date | null;
   createdAt: Date;

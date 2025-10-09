@@ -3,7 +3,12 @@ ignorePaths: []
 dictionaryDefinitions: []
 dictionaries: []
 words:
+  - chilean
   - ekoru
+  - KHIPU
+  - TIKTOK
+  - UPCYCLING
+  - WEBPAY
 ignoreWords:
   - datasource
   - postgresql

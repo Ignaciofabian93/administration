@@ -1,6 +1,6 @@
 import prisma from "../../../client/prisma";
 import { ErrorService } from "../../../errors/errors";
-import { type PaginationInput } from "../../resolvers/admin";
+import { type PaginationInput } from "../../resolvers/main";
 
 export const LocationServices = {
   getCountries: async ({ adminId, limit, offset }: { adminId: string } & PaginationInput) => {

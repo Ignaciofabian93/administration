@@ -1,7 +1,7 @@
 import prisma from "../../../client/prisma";
 import { ErrorService } from "../../../errors/errors";
 import { genSalt, hash } from "bcrypt";
-import { CreateAdminInput } from "../../resolvers/admin";
+import { CreateAdminInput } from "../../resolvers/main";
 
 export const AdminService = {
   getAdmins: async ({

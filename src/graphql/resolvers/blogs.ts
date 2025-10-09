@@ -1,6 +1,6 @@
 import { BlogCategory } from "../../types";
 import { PlatformAdminService } from "../services/admin";
-import { PaginationInput } from "./admin";
+import { PaginationInput } from "./main";
 
 export const BlogsResolver = {
   Query: {

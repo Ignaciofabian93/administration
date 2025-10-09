@@ -1,4 +1,4 @@
-import { AdminResolver } from "./admin";
+import { AdminResolver } from "./main";
 
 export const resolvers = {
   Query: {

@@ -10,6 +10,12 @@ export type BlogPost = {
   createdAt: Date;
   updatedAt: Date;
   category: BlogCategory;
+  author: {
+    id: string;
+    name: string;
+    lastName?: string | null;
+    email: string;
+  };
 };
 
 export type CommunityPost = {

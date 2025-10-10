@@ -1090,7 +1090,6 @@ export const typeDefs = gql`
   input UpdateBlogPostInput {
     title: String
     content: String
-    tags: [String!]
     category: BlogCategory
     isPublished: Boolean
   }

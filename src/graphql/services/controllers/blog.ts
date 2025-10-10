@@ -43,8 +43,23 @@ export const BlogServices = {
         where,
         take: limit,
         skip: offset,
-        include: {
-          author: true,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          category: true,
+          isPublished: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              email: true,
+            },
+          },
         },
         orderBy: {
           createdAt: "desc",
@@ -65,8 +80,23 @@ export const BlogServices = {
       const parsedId = Number(id);
       const blogPost = await prisma.blogPost.findUnique({
         where: { id: parsedId },
-        include: {
-          author: true,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          category: true,
+          isPublished: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              email: true,
+            },
+          },
         },
       });
 
@@ -99,8 +129,23 @@ export const BlogServices = {
         where: { authorId },
         take: limit,
         skip: offset,
-        include: {
-          author: true,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          category: true,
+          isPublished: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              email: true,
+            },
+          },
         },
         orderBy: {
           createdAt: "desc",
@@ -125,8 +170,23 @@ export const BlogServices = {
           isPublished: input.isPublished || false,
           publishedAt: input.isPublished ? new Date() : null,
         },
-        include: {
-          author: true,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          category: true,
+          isPublished: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              email: true,
+            },
+          },
         },
       });
 
@@ -153,8 +213,23 @@ export const BlogServices = {
       const blogPost = await prisma.blogPost.update({
         where: { id: parsedId },
         data: input,
-        include: {
-          author: true,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          category: true,
+          isPublished: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              email: true,
+            },
+          },
         },
       });
 
@@ -200,8 +275,23 @@ export const BlogServices = {
           isPublished: true,
           publishedAt: new Date(),
         },
-        include: {
-          author: true,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          category: true,
+          isPublished: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              email: true,
+            },
+          },
         },
       });
 
@@ -223,8 +313,23 @@ export const BlogServices = {
           isPublished: false,
           publishedAt: null,
         },
-        include: {
-          author: true,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          category: true,
+          isPublished: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              email: true,
+            },
+          },
         },
       });
 

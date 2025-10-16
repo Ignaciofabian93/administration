@@ -6,6 +6,7 @@ import { DepartmentsResolver } from "./departments";
 import { ImpactResolver } from "./impact";
 import { LocationResolver } from "./location";
 import { ProductsResolver } from "./products";
+import { SellerLevelResolver } from "./sellerLevel";
 
 export type CreateAdminInput = {
   email: string;
@@ -18,11 +19,11 @@ export type CreateAdminInput = {
 };
 
 export type PaginationInput = {
-  limit: number;
-  offset: number;
+  page?: number;
+  pageSize?: number;
 };
 
-export const AdminResolver = {
+export const MainResolver = {
   Query: {
     // Location queries
     ...LocationResolver.Query,
@@ -38,6 +39,8 @@ export const AdminResolver = {
     ...ImpactResolver.Query,
     // Community queries
     ...CommunityResolver.Query,
+    // Seller level queries
+    ...SellerLevelResolver.Query,
   },
   Mutation: {
     // Admin management
@@ -54,6 +57,8 @@ export const AdminResolver = {
     ...LocationResolver.Mutation,
     // Community Management
     ...CommunityResolver.Mutation,
+    // Seller level management
+    ...SellerLevelResolver.Mutation,
   },
 
   // Field resolvers to map Prisma relation names to GraphQL schema

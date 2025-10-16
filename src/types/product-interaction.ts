@@ -2,6 +2,7 @@ export type ProductLike = {
   id: number;
   productId: number;
   sellerId: string;
+  createdAt: Date;
 };
 
 export type ProductComment = {

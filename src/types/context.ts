@@ -4,7 +4,6 @@ export type Context = {
   req: Request;
   res: Response;
   token?: string;
-  userId?: string;
   adminId?: string;
 };
 

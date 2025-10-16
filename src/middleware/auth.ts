@@ -7,7 +7,6 @@ export const createContext = ({ req }: { req: any }): Context => {
   console.log("Cookies:", req.cookies);
 
   const authHeader = req.headers.authorization;
-  let userId: string | undefined = req.headers["x-user-id"];
   let adminId: string | undefined = req.headers["x-admin-id"];
 
   // Try to extract adminId from cookie token if not in headers
@@ -21,41 +20,24 @@ export const createContext = ({ req }: { req: any }): Context => {
     }
   }
 
-  // Try to extract userId from cookie token if not in headers
-  if (!userId && req.cookies && req.cookies["token"]) {
-    try {
-      const decoded = jwt.verify(req.cookies["token"], process.env.JWT_SECRET as string) as JwtPayload;
-      userId = decoded.userId;
-      console.log("✅ User ID extracted from token cookie:", userId);
-    } catch (error) {
-      console.warn("❌ Failed to decode user token from cookie:", error);
-    }
-  }
-
   // Try to extract from Authorization header if still not found
-  if (!adminId && !userId && authHeader) {
+  if (!adminId && authHeader) {
     try {
       const token = authHeader.replace("Bearer ", "");
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
-      // Determine if it's admin or user based on which cookie type exists or default to adminId
-      if (req.cookies && req.cookies["x-o-token"]) {
-        adminId = decoded.userId;
-      } else {
-        userId = decoded.userId;
-      }
-      console.log("✅ ID extracted from Authorization header");
+      adminId = decoded.userId;
+      console.log("✅ Admin ID extracted from Authorization header");
     } catch (error) {
       console.warn("❌ Failed to decode token from Authorization header:", error);
     }
   }
 
-  console.log("📋 Final Context:", { adminId, userId });
+  console.log("📋 Final Context:", { adminId });
 
   return {
     req,
     res: req.res,
-    token: authHeader?.replace("Bearer ", "") || req.cookies?.["x-o-token"] || req.cookies?.["token"],
-    userId,
+    token: authHeader?.replace("Bearer ", "") || req.cookies?.["x-o-token"],
     adminId,
   };
 };

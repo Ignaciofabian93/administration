@@ -37,3 +37,14 @@ export type CommunityComment = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type CommunityCategory = {
+  id: number;
+  category: string;
+};
+
+export type CommunitySubCategory = {
+  id: number;
+  subCategory: string;
+  communityCategoryId: number;
+};

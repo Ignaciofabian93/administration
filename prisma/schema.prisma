@@ -44,11 +44,12 @@ model Admin {
 }
 
 model Country {
-  id      Int      @id @default(autoincrement())
-  country String
-  Admin   Admin[]
-  regions Region[]
-  sellers Seller[]
+  id            Int            @id @default(autoincrement())
+  country       String
+  Admin         Admin[]
+  CountryConfig CountryConfig?
+  regions       Region[]
+  sellers       Seller[]
 }
 
 model Region {
@@ -88,8 +89,13 @@ model Match {
   receiverId String
   createdAt  DateTime @default(now())
   isMatched  Boolean  @default(false)
+  updatedAt  DateTime
   receiver   Seller   @relation("MatchReceiver", fields: [receiverId], references: [id])
   sender     Seller   @relation("MatchSender", fields: [senderId], references: [id])
+
+  @@index([isMatched])
+  @@index([receiverId])
+  @@index([senderId])
 }
 
 model Story {
@@ -119,30 +125,18 @@ model DepartmentCategory {
 }
 
 model ProductCategory {
-  id                         Int                     @id @default(autoincrement())
-  departmentCategoryId       Int
-  averageWeight              Float?                  @default(0.0)
-  fifthMaterialTypeId        Int?
-  fifthMaterialTypeQuantity  Float?                  @default(0.0)
-  firstMaterialTypeId        Int?
-  firstMaterialTypeQuantity  Float?                  @default(0.0)
-  fourthMaterialTypeId       Int?
-  fourthMaterialTypeQuantity Float?                  @default(0.0)
-  keywords                   String[]
-  productCategoryName        String
-  secondMaterialTypeId       Int?
-  secondMaterialTypeQuantity Float?                  @default(0.0)
-  size                       ProductSize?            @default(M)
-  thirdMaterialTypeId        Int?
-  thirdMaterialTypeQuantity  Float?                  @default(0.0)
-  weightUnit                 WeightUnit?             @default(KG)
-  products                   Product[]
-  departmentCategory         DepartmentCategory      @relation(fields: [departmentCategoryId], references: [id])
-  fifthMaterialType          MaterialImpactEstimate? @relation("FifthMaterialType", fields: [fifthMaterialTypeId], references: [id])
-  firstMaterialType          MaterialImpactEstimate? @relation("FirstMaterialType", fields: [firstMaterialTypeId], references: [id])
-  fourthMaterialType         MaterialImpactEstimate? @relation("FourthMaterialType", fields: [fourthMaterialTypeId], references: [id])
-  secondMaterialType         MaterialImpactEstimate? @relation("SecondMaterialType", fields: [secondMaterialTypeId], references: [id])
-  thirdMaterialType          MaterialImpactEstimate? @relation("ThirdMaterialType", fields: [thirdMaterialTypeId], references: [id])
+  id                      Int                       @id @default(autoincrement())
+  departmentCategoryId    Int
+  averageWeight           Float?                    @default(0.0)
+  keywords                String[]
+  productCategoryName     String
+  size                    ProductSize?              @default(M)
+  weightUnit              WeightUnit?               @default(KG)
+  products                Product[]
+  departmentCategory      DepartmentCategory        @relation(fields: [departmentCategoryId], references: [id])
+  ProductCategoryMaterial ProductCategoryMaterial[]
+
+  @@index([departmentCategoryId])
 }
 
 model Product {
@@ -151,11 +145,9 @@ model Product {
   description                                   String
   price                                         Int
   hasOffer                                      Boolean          @default(false)
-  offerPrice                                    Int              @default(0)
-  stock                                         Int              @default(0)
+  offerPrice                                    Int?             @default(0)
   sellerId                                      String
   badges                                        Badge[]
-  barcode                                       String?          @unique
   brand                                         String
   color                                         String?
   createdAt                                     DateTime         @default(now())
@@ -164,16 +156,10 @@ model Product {
   isActive                                      Boolean          @default(true)
   isExchangeable                                Boolean          @default(false)
   productCategoryId                             Int
-  ratingCount                                   Int              @default(0)
-  ratings                                       Float            @default(0)
-  reviewsNumber                                 Int              @default(0)
-  sku                                           String?
   updatedAt                                     DateTime         @updatedAt
   condition                                     ProductCondition @default(NEW)
   conditionDescription                          String?
-  sustainabilityScore                           Int?
-  materialComposition                           String?
-  recycledContent                               Float?
+  deletedAt                                     DateTime?
   chats                                         Chat[]
   Exchange_Exchange_offeredProductIdToProduct   Exchange[]       @relation("Exchange_offeredProductIdToProduct")
   Exchange_Exchange_requestedProductIdToProduct Exchange[]       @relation("Exchange_requestedProductIdToProduct")
@@ -182,36 +168,47 @@ model Product {
   seller                                        Seller           @relation(fields: [sellerId], references: [id])
   comments                                      ProductComment[]
   likes                                         ProductLike[]
-  productVariants                               ProductVariant[]
 
   @@index([sellerId])
   @@index([productCategoryId])
   @@index([isActive])
   @@index([createdAt])
   @@index([price])
+  @@index([createdAt(sort: Desc), isActive])
+  @@index([deletedAt])
+  @@index([hasOffer, isActive])
+  @@index([isExchangeable, isActive])
+  @@index([productCategoryId, isActive])
+  @@index([sellerId, isActive])
 }
 
 model ProductVariant {
-  id        Int      @id @default(autoincrement())
-  productId Int
-  name      String
-  price     Int
-  stock     Int
-  color     String?
-  size      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  product   Product  @relation(fields: [productId], references: [id])
+  id             Int          @id @default(autoincrement())
+  name           String
+  price          Int
+  stock          Int
+  color          String?
+  size           String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  storeProductId Int
+  StoreProduct   StoreProduct @relation(fields: [storeProductId], references: [id])
 
-  @@unique([productId, color, size])
+  @@unique([storeProductId, color, size])
 }
 
 model ProductLike {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   productId Int
   sellerId  String
-  product   Product @relation(fields: [productId], references: [id])
-  seller    Seller  @relation(fields: [sellerId], references: [id])
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  seller    Seller   @relation(fields: [sellerId], references: [id])
+
+  @@unique([productId, sellerId])
+  @@index([createdAt(sort: Desc)])
+  @@index([productId])
+  @@index([sellerId])
 }
 
 model ProductComment {
@@ -244,6 +241,10 @@ model Transaction {
   sellerId        String
   exchange        Exchange?
   seller          Seller          @relation(fields: [sellerId], references: [id])
+
+  @@index([createdAt])
+  @@index([sellerId, createdAt(sort: Desc)])
+  @@index([sellerId, kind])
 }
 
 model Order {
@@ -251,19 +252,29 @@ model Order {
   sellerId         String
   createdAt        DateTime       @default(now())
   shippingStatusId Int
+  updatedAt        DateTime
+  version          Int            @default(0)
   seller           Seller         @relation(fields: [sellerId], references: [id])
   shippingStatus   ShippingStatus @relation(fields: [shippingStatusId], references: [id])
   orderItems       OrderItem[]
   payments         Payment[]
+
+  @@index([createdAt(sort: Desc)])
+  @@index([sellerId])
+  @@index([shippingStatusId])
 }
 
 model OrderItem {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   orderId   Int
   productId Int
   quantity  Int
-  order     Order   @relation(fields: [orderId], references: [id])
-  product   Product @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model ShippingStatus {
@@ -312,15 +323,14 @@ model Exchange {
 /// //////////////////////////////////////////////////////////////////////////////////////////////////////
 /// //////////////////////////////////////////////////////////////////////////////////////////////////////
 model MaterialImpactEstimate {
-  id                      Int               @id @default(autoincrement())
-  materialType            String
+  id                      Int                       @id @default(autoincrement())
+  materialType            String                    @unique
   estimatedCo2SavingsKG   Float
   estimatedWaterSavingsLT Float
-  fifthMaterialTypeFor    ProductCategory[] @relation("FifthMaterialType")
-  firstMaterialTypeFor    ProductCategory[] @relation("FirstMaterialType")
-  fourthMaterialTypeFor   ProductCategory[] @relation("FourthMaterialType")
-  secondMaterialTypeFor   ProductCategory[] @relation("SecondMaterialType")
-  thirdMaterialTypeFor    ProductCategory[] @relation("ThirdMaterialType")
+  ProductCategoryMaterial ProductCategoryMaterial[]
+  StoreProductMaterial    StoreProductMaterial[]
+
+  @@index([materialType])
 }
 
 model Co2ImpactMessage {
@@ -384,6 +394,7 @@ model Payment {
   processedAt     DateTime?
   refundedAt      DateTime?
   chileanConfigId Int
+  paymentType     PaymentType
   chileanConfig   ChileanPaymentConfig   @relation("ChileanPaymentConfig", fields: [chileanConfigId], references: [id])
   order           Order?                 @relation(fields: [orderId], references: [id])
   payer           Seller                 @relation("PaymentPayer", fields: [payerId], references: [id])
@@ -401,6 +412,8 @@ model Payment {
   @@index([createdAt])
   @@index([externalId])
   @@index([paymentProvider])
+  @@index([payerId, status])
+  @@index([receiverId, status])
 }
 
 model PaymentRefund {
@@ -509,8 +522,11 @@ model Seller {
   preferredContactMethod ContactMethod?         @default(WHATSAPP)
   socialMediaLinks       Json?
   accountType            AccountType?           @default(FREE)
-  points                 Int?                   @default(0)
+  points                 Int                    @default(0)
   sellerCategoryId       Int?
+  locale                 String                 @default("es-CL")
+  sellerLevelId          Int?
+  timezone               String                 @default("America/Santiago")
   Admin                  Admin[]
   BusinessProfile        BusinessProfile?
   receivedChats          Chat[]                 @relation("ChatReceiver")
@@ -536,9 +552,11 @@ model Seller {
   county                 County?                @relation(fields: [countyId], references: [id])
   region                 Region?                @relation(fields: [regionId], references: [id])
   sellerCategory         SellerCategory?        @relation(fields: [sellerCategoryId], references: [id])
+  SellerLevel            SellerLevel?           @relation(fields: [sellerLevelId], references: [id])
   preferences            SellerPreferences?
   services               Service[]
   serviceReviews         ServiceReview[]        @relation("ServiceReviews")
+  StoreProduct           StoreProduct[]
   stories                Story[]
   transactions           Transaction[]
 
@@ -547,6 +565,10 @@ model Seller {
   @@index([isActive])
   @@index([isVerified])
   @@index([cityId])
+  @@index([createdAt(sort: Desc)])
+  @@index([points(sort: Desc)])
+  @@index([sellerLevelId])
+  @@index([sellerType, isActive])
 }
 
 model SellerPreferences {
@@ -588,38 +610,39 @@ model SellerCategory {
 }
 
 model ServiceCategory {
-  id          Int       @id @default(autoincrement())
-  name        String    @unique
-  description String?
-  icon        String?
-  isActive    Boolean   @default(true)
-  services    Service[]
+  id                 Int                  @id @default(autoincrement())
+  category           String               @unique
+  ServiceSubCategory ServiceSubCategory[]
 }
 
 model Service {
-  id          Int             @id @default(autoincrement())
-  name        String
-  description String?
-  sellerId    String
-  categoryId  Int
-  pricingType ServicePricing  @default(QUOTATION)
-  basePrice   Float?
-  priceRange  String?
-  duration    Int?
-  isActive    Boolean         @default(true)
-  images      String[]
-  tags        String[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  quotations  Quotation[]
-  category    ServiceCategory @relation(fields: [categoryId], references: [id])
-  seller      Seller          @relation(fields: [sellerId], references: [id])
-  reviews     ServiceReview[]
+  id                 Int                @id @default(autoincrement())
+  name               String
+  description        String?
+  sellerId           String
+  pricingType        ServicePricing     @default(QUOTATION)
+  basePrice          Float?
+  priceRange         String?
+  duration           Int?
+  isActive           Boolean            @default(true)
+  images             String[]
+  tags               String[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  subcategoryId      Int
+  quotations         Quotation[]
+  seller             Seller             @relation(fields: [sellerId], references: [id])
+  ServiceSubCategory ServiceSubCategory @relation(fields: [subcategoryId], references: [id])
+  reviews            ServiceReview[]
 
   @@index([sellerId])
-  @@index([categoryId])
   @@index([isActive])
   @@index([pricingType])
+  @@index([createdAt(sort: Desc), isActive])
+  @@index([sellerId, isActive])
+  @@index([sellerId, isActive, pricingType])
+  @@index([subcategoryId])
+  @@index([subcategoryId, isActive])
 }
 
 model Quotation {
@@ -714,6 +737,9 @@ model AdminActivityLog {
   @@index([adminId])
   @@index([createdAt])
   @@index([entityType])
+  @@index([action, createdAt(sort: Desc)])
+  @@index([adminId, createdAt(sort: Desc)])
+  @@index([entityType, entityId])
 }
 
 model BusinessProfile {
@@ -756,6 +782,162 @@ model BusinessProfile {
   @@index([taxId])
 }
 
+model CommunityCategory {
+  id                   Int                    @id @default(autoincrement())
+  category             String                 @unique
+  CommunitySubCategory CommunitySubCategory[]
+}
+
+model CommunitySubCategory {
+  id                  Int               @id @default(autoincrement())
+  subCategory         String
+  communityCategoryId Int
+  CommunityCategory   CommunityCategory @relation(fields: [communityCategoryId], references: [id])
+}
+
+model CountryConfig {
+  id                        Int      @id @default(autoincrement())
+  countryId                 Int      @unique
+  countryCode               String   @unique
+  currencyCode              String
+  currencySymbol            String
+  taxIdLabel                String
+  taxIdFormat               String?
+  defaultTimezone           String
+  defaultLocale             String
+  isActive                  Boolean  @default(false)
+  phonePrefix               String
+  availablePaymentProviders Json
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime
+  Country                   Country  @relation(fields: [countryId], references: [id])
+
+  @@index([countryCode])
+  @@index([isActive])
+}
+
+model ProductCategoryMaterial {
+  id                     Int                    @id @default(autoincrement())
+  productCategoryId      Int
+  materialTypeId         Int
+  quantity               Float
+  unit                   String                 @default("percentage")
+  isPrimary              Boolean                @default(false)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime
+  MaterialImpactEstimate MaterialImpactEstimate @relation(fields: [materialTypeId], references: [id])
+  ProductCategory        ProductCategory        @relation(fields: [productCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([productCategoryId, materialTypeId])
+  @@index([isPrimary])
+  @@index([materialTypeId])
+  @@index([productCategoryId])
+}
+
+model SellerLevel {
+  id        Int      @id @default(autoincrement())
+  levelName String   @unique
+  minPoints Int      @unique
+  maxPoints Int?
+  benefits  Json?
+  badgeIcon String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Seller    Seller[]
+
+  @@index([minPoints])
+}
+
+model ServiceSubCategory {
+  id                Int             @id @default(autoincrement())
+  subCategory       String
+  serviceCategoryId Int
+  Service           Service[]
+  ServiceCategory   ServiceCategory @relation(fields: [serviceCategoryId], references: [id])
+}
+
+model StoreCategory {
+  id               Int                @id @default(autoincrement())
+  category         String
+  StoreSubCategory StoreSubCategory[]
+}
+
+model StoreProduct {
+  id                   Int                    @id @default(autoincrement())
+  name                 String
+  description          String
+  stock                Int                    @default(0)
+  barcode              String?                @unique
+  sku                  String?
+  price                Int
+  hasOffer             Boolean                @default(false)
+  offerPrice           Int?
+  sellerId             String
+  createdAt            DateTime               @default(now())
+  images               String[]
+  isActive             Boolean                @default(true)
+  updatedAt            DateTime
+  badges               Badge[]
+  brand                String?
+  color                String?
+  ratingCount          Int                    @default(0)
+  ratings              Float                  @default(0)
+  reviewsNumber        Int                    @default(0)
+  materialComposition  String?
+  recycledContent      Float?
+  subcategoryId        Int
+  deletedAt            DateTime?
+  sustainabilityScore  Int?
+  carbonFootprint      Float?
+  ProductVariant       ProductVariant[]
+  Seller               Seller                 @relation(fields: [sellerId], references: [id])
+  StoreSubCategory     StoreSubCategory       @relation(fields: [subcategoryId], references: [id])
+  StoreProductMaterial StoreProductMaterial[]
+
+  @@index([createdAt(sort: Desc), isActive])
+  @@index([deletedAt])
+  @@index([hasOffer, isActive])
+  @@index([isActive])
+  @@index([ratings(sort: Desc), isActive])
+  @@index([sellerId])
+  @@index([sellerId, isActive])
+  @@index([stock])
+  @@index([subcategoryId])
+  @@index([subcategoryId, isActive])
+}
+
+model StoreProductMaterial {
+  id                     Int                    @id @default(autoincrement())
+  storeProductId         Int
+  materialTypeId         Int
+  quantity               Float
+  unit                   String                 @default("percentage")
+  isPrimary              Boolean                @default(false)
+  sourceMaterial         String?
+  isRecycled             Boolean                @default(true)
+  recycledPercentage     Float?                 @default(100)
+  supplierVerified       Boolean                @default(false)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime
+  MaterialImpactEstimate MaterialImpactEstimate @relation(fields: [materialTypeId], references: [id])
+  StoreProduct           StoreProduct           @relation(fields: [storeProductId], references: [id], onDelete: Cascade)
+
+  @@unique([storeProductId, materialTypeId])
+  @@index([isPrimary])
+  @@index([isRecycled])
+  @@index([materialTypeId])
+  @@index([sourceMaterial])
+  @@index([storeProductId])
+}
+
+model StoreSubCategory {
+  id              Int            @id @default(autoincrement())
+  subCategory     String
+  storeCategoryId Int
+  StoreProduct    StoreProduct[]
+  StoreCategory   StoreCategory  @relation(fields: [storeCategoryId], references: [id])
+}
+
 enum AdminRole {
   SUPER_ADMIN
   MODERATOR
@@ -775,10 +957,13 @@ enum AccountType {
 
 enum TransactionKind {
   PURCHASE
+  SELL
+  STOREPURCHASE
   EXCHANGE
-  GIFT
-  REFERRAL
-  BONUS
+  RECYCLE
+  REPAIR
+  ATTENDTOWORKSHOP
+  ATTENDTOEVENT
 }
 
 enum ShippingStage {
@@ -1007,4 +1192,23 @@ enum BusinessType {
 enum ChileanPaymentProvider {
   KHIPU
   WEBPAY
+}
+
+enum BusinessSubscriptionPlan {
+  FREEMIUM
+  STARTUP
+  BASIC
+  ADVANCED
+  EXPERT
+}
+
+enum PaymentType {
+  ORDER
+  QUOTATION
+}
+
+enum PersonSubscriptionPlan {
+  FREEMIUM
+  BASIC
+  ADVANCED
 }

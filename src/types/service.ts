@@ -2,10 +2,13 @@ import { type ServicePricing, type QuotationStatus } from "./enums";
 
 export type ServiceCategory = {
   id: number;
-  name: string;
-  description?: string | null;
-  icon?: string | null;
-  isActive: boolean;
+  category: string;
+};
+
+export type ServiceSubCategory = {
+  id: number;
+  subCategory: string;
+  serviceCategoryId: number;
 };
 
 export type Service = {
@@ -13,7 +16,6 @@ export type Service = {
   name: string;
   description?: string | null;
   sellerId: string;
-  categoryId: number;
   pricingType: ServicePricing;
   basePrice?: number | null;
   priceRange?: string | null;
@@ -23,6 +25,7 @@ export type Service = {
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
+  subcategoryId: number;
 };
 
 export type Quotation = {

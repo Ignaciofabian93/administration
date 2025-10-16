@@ -211,11 +211,29 @@ export const typeDefs = gql`
     WEBPAY
   }
 
+  enum PaymentType {
+    ORDER
+    QUOTATION
+  }
+
+  enum BusinessSubscriptionPlan {
+    FREEMIUM
+    STARTUP
+    BASIC
+    ADVANCED
+    EXPERT
+  }
+
+  enum PersonSubscriptionPlan {
+    FREEMIUM
+    BASIC
+    ADVANCED
+  }
+
   enum Badge {
     POPULAR
     DISCOUNTED
     WOMAN_OWNED
-    ECO_FRIENDLY
     BEST_SELLER
     TOP_RATED
     COMMUNITY_FAVORITE
@@ -230,10 +248,6 @@ export const typeDefs = gql`
     LIMITED_STOCK
     SEASONAL
     FREE_SHIPPING
-    NEW
-    USED
-    SLIGHT_DAMAGE
-    WORN
     FOR_REPAIR
     REFURBISHED
     EXCHANGEABLE
@@ -308,13 +322,13 @@ export const typeDefs = gql`
     recycledContent: Float
     createdAt: DateTime!
     updatedAt: DateTime!
+    deletedAt: DateTime
     productCategoryId: Int!
     sellerId: String!
     productCategory: ProductCategory!
     seller: Seller!
     comments: [ProductComment!]!
     likes: [ProductLike!]!
-    productVariants: [ProductVariant!]!
     itemsOrdered: [OrderItem!]!
     chats: [Chat!]!
     exchangesOffered: [Exchange!]!
@@ -344,11 +358,8 @@ export const typeDefs = gql`
     materialType: String!
     estimatedCo2SavingsKG: Float
     estimatedWaterSavingsLT: Float
-    firstMaterialTypeFor: [ProductCategory]
-    secondMaterialTypeFor: [ProductCategory]
-    thirdMaterialTypeFor: [ProductCategory]
-    fourthMaterialTypeFor: [ProductCategory]
-    fifthMaterialTypeFor: [ProductCategory]
+    productCategoryMaterials: [ProductCategoryMaterial!]!
+    storeProductMaterials: [StoreProductMaterial!]!
   }
 
   type ProductCategory {
@@ -358,24 +369,10 @@ export const typeDefs = gql`
     departmentCategory: DepartmentCategory
     keywords: [String]
     averageWeight: Float
-    firstMaterialTypeId: Int
-    firstMaterialTypeQuantity: Float
-    secondMaterialTypeId: Int
-    secondMaterialTypeQuantity: Float
-    thirdMaterialTypeId: Int
-    thirdMaterialTypeQuantity: Float
-    fourthMaterialTypeId: Int
-    fourthMaterialTypeQuantity: Float
-    fifthMaterialTypeId: Int
-    fifthMaterialTypeQuantity: Float
     size: ProductSize
     weightUnit: WeightUnit
     products: [Product]
-    firstMaterialType: MaterialImpactEstimate
-    secondMaterialType: MaterialImpactEstimate
-    thirdMaterialType: MaterialImpactEstimate
-    fourthMaterialType: MaterialImpactEstimate
-    fifthMaterialType: MaterialImpactEstimate
+    productCategoryMaterials: [ProductCategoryMaterial!]!
   }
 
   type DepartmentCategory {
@@ -424,6 +421,134 @@ export const typeDefs = gql`
     categoryDiscountAmount: Int!
     pointsThreshold: Int!
     level: Int!
+  }
+
+  type SellerLevel {
+    id: ID!
+    levelName: String!
+    minPoints: Int!
+    maxPoints: Int
+    benefits: JSON
+    badgeIcon: String
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    sellers: [Seller!]!
+  }
+
+  type ServiceSubCategory {
+    id: ID!
+    subCategory: String!
+    serviceCategoryId: Int!
+    serviceCategory: ServiceCategory!
+    services: [Service!]!
+  }
+
+  type CommunityCategory {
+    id: ID!
+    category: String!
+    communitySubCategories: [CommunitySubCategory!]!
+  }
+
+  type CommunitySubCategory {
+    id: ID!
+    subCategory: String!
+    communityCategoryId: Int!
+    communityCategory: CommunityCategory!
+  }
+
+  type CountryConfig {
+    id: ID!
+    countryId: Int!
+    countryCode: String!
+    currencyCode: String!
+    currencySymbol: String!
+    taxIdLabel: String!
+    taxIdFormat: String
+    defaultTimezone: String!
+    defaultLocale: String!
+    isActive: Boolean!
+    phonePrefix: String!
+    availablePaymentProviders: JSON!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    country: Country!
+  }
+
+  type ProductCategoryMaterial {
+    id: ID!
+    productCategoryId: Int!
+    materialTypeId: Int!
+    quantity: Float!
+    unit: String!
+    isPrimary: Boolean!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    materialImpactEstimate: MaterialImpactEstimate!
+    productCategory: ProductCategory!
+  }
+
+  type StoreCategory {
+    id: ID!
+    category: String!
+    storeSubCategories: [StoreSubCategory!]!
+  }
+
+  type StoreSubCategory {
+    id: ID!
+    subCategory: String!
+    storeCategoryId: Int!
+    storeCategory: StoreCategory!
+    storeProducts: [StoreProduct!]!
+  }
+
+  type StoreProduct {
+    id: ID!
+    name: String!
+    description: String!
+    stock: Int!
+    barcode: String
+    sku: String
+    price: Int!
+    hasOffer: Boolean!
+    offerPrice: Int
+    sellerId: String!
+    createdAt: DateTime!
+    images: [String!]!
+    isActive: Boolean!
+    updatedAt: DateTime!
+    badges: [Badge!]!
+    brand: String
+    color: String
+    ratingCount: Int!
+    ratings: Float!
+    reviewsNumber: Int!
+    materialComposition: String
+    recycledContent: Float
+    subcategoryId: Int!
+    deletedAt: DateTime
+    sustainabilityScore: Int
+    carbonFootprint: Float
+    productVariants: [ProductVariant!]!
+    seller: Seller!
+    storeSubCategory: StoreSubCategory!
+    storeProductMaterials: [StoreProductMaterial!]!
+  }
+
+  type StoreProductMaterial {
+    id: ID!
+    storeProductId: Int!
+    materialTypeId: Int!
+    quantity: Float!
+    unit: String!
+    isPrimary: Boolean!
+    sourceMaterial: String
+    isRecycled: Boolean!
+    recycledPercentage: Float
+    supplierVerified: Boolean!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    materialImpactEstimate: MaterialImpactEstimate!
+    storeProduct: StoreProduct!
   }
 
   type SellerPreferences {
@@ -495,10 +620,9 @@ export const typeDefs = gql`
   # Service Types
   type ServiceCategory {
     id: ID!
-    name: String!
-    description: String
-    icon: String
+    category: String!
     isActive: Boolean!
+    serviceSubCategories: [ServiceSubCategory!]!
   }
 
   type Service {
@@ -506,7 +630,6 @@ export const typeDefs = gql`
     name: String!
     description: String
     sellerId: String!
-    categoryId: Int!
     pricingType: ServicePricing!
     basePrice: Float
     priceRange: String
@@ -516,7 +639,8 @@ export const typeDefs = gql`
     tags: [String!]!
     createdAt: DateTime!
     updatedAt: DateTime!
-    category: ServiceCategory!
+    subcategoryId: Int!
+    serviceSubCategory: ServiceSubCategory!
     seller: Seller!
     quotations: [Quotation!]!
     reviews: [ServiceReview!]!
@@ -563,6 +687,8 @@ export const typeDefs = gql`
     sellerId: String!
     createdAt: DateTime!
     shippingStatusId: Int!
+    updatedAt: DateTime!
+    version: Int!
     seller: Seller!
     shippingStatus: ShippingStatus!
     orderItems: [OrderItem!]!
@@ -574,6 +700,7 @@ export const typeDefs = gql`
     orderId: Int!
     productId: Int!
     quantity: Int!
+    createdAt: DateTime!
     order: Order!
     product: Product!
   }
@@ -631,6 +758,7 @@ export const typeDefs = gql`
     processedAt: DateTime
     refundedAt: DateTime
     chileanConfigId: Int!
+    paymentType: PaymentType!
     chileanConfig: ChileanPaymentConfig!
     order: Order
     payer: Seller!
@@ -752,7 +880,6 @@ export const typeDefs = gql`
   # Additional Product Types
   type ProductVariant {
     id: ID!
-    productId: Int!
     name: String!
     price: Int!
     stock: Int!
@@ -760,7 +887,8 @@ export const typeDefs = gql`
     size: String
     createdAt: DateTime!
     updatedAt: DateTime!
-    product: Product!
+    storeProductId: Int!
+    storeProduct: StoreProduct!
   }
 
   # Match and Story Types
@@ -781,19 +909,6 @@ export const typeDefs = gql`
     description: String!
     sellerId: String!
     seller: Seller!
-  }
-
-  type AdminActivityLog {
-    id: ID!
-    adminId: String!
-    action: String!
-    entityType: String
-    entityId: String
-    changes: JSON
-    ipAddress: String
-    userAgent: String
-    metadata: JSON
-    createdAt: DateTime!
   }
 
   # Profile Types
@@ -858,6 +973,103 @@ export const typeDefs = gql`
   scalar DateTime
   scalar JSON
 
+  # Pagination Types
+  type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
+    totalCount: Int!
+    totalPages: Int!
+    currentPage: Int!
+    pageSize: Int!
+  }
+
+  type CountriesConnection {
+    nodes: [Country!]!
+    pageInfo: PageInfo!
+  }
+
+  type RegionsConnection {
+    nodes: [Region!]!
+    pageInfo: PageInfo!
+  }
+
+  type CitiesConnection {
+    nodes: [City!]!
+    pageInfo: PageInfo!
+  }
+
+  type CountiesConnection {
+    nodes: [County!]!
+    pageInfo: PageInfo!
+  }
+
+  type AdminsConnection {
+    nodes: [Admin!]!
+    pageInfo: PageInfo!
+  }
+
+  type BlogPostsConnection {
+    nodes: [BlogPost!]!
+    pageInfo: PageInfo!
+  }
+
+  type ProductsConnection {
+    nodes: [Product!]!
+    pageInfo: PageInfo!
+  }
+
+  type CommunityPostsConnection {
+    nodes: [CommunityPost!]!
+    pageInfo: PageInfo!
+  }
+
+  type CommunityCommentsConnection {
+    nodes: [CommunityComment!]!
+    pageInfo: PageInfo!
+  }
+
+  type StoreProductsConnection {
+    nodes: [StoreProduct!]!
+    pageInfo: PageInfo!
+  }
+
+  type MaterialImpactEstimatesConnection {
+    nodes: [MaterialImpactEstimate!]!
+    pageInfo: PageInfo!
+  }
+
+  type Co2ImpactMessagesConnection {
+    nodes: [Co2ImpactMessage!]!
+    pageInfo: PageInfo!
+  }
+
+  type WaterImpactMessagesConnection {
+    nodes: [WaterImpactMessage!]!
+    pageInfo: PageInfo!
+  }
+
+  type StoreProductMaterialsConnection {
+    nodes: [StoreProductMaterial!]!
+    pageInfo: PageInfo!
+  }
+
+  type ProductCategoryMaterialsConnection {
+    nodes: [ProductCategoryMaterial!]!
+    pageInfo: PageInfo!
+  }
+
+  type CountryConfigsConnection {
+    nodes: [CountryConfig!]!
+    pageInfo: PageInfo!
+  }
+
+  type SellerLevelsConnection {
+    nodes: [SellerLevel!]!
+    pageInfo: PageInfo!
+  }
+
   # Union Types
   union Profile = PersonProfile | BusinessProfile
 
@@ -914,12 +1126,16 @@ export const typeDefs = gql`
     accountType: AccountType
     points: Int
     sellerCategoryId: Int
+    locale: String!
+    sellerLevelId: Int
+    timezone: String!
     # Relations
     city: City
     country: Country
     county: County
     region: Region
     sellerCategory: SellerCategory
+    sellerLevel: SellerLevel
     preferences: SellerPreferences
     personProfile: PersonProfile
     businessProfile: BusinessProfile
@@ -1119,16 +1335,6 @@ export const typeDefs = gql`
     productCategoryName: String!
     keywords: [String!]
     averageWeight: Float
-    firstMaterialTypeId: Int
-    firstMaterialTypeQuantity: Float
-    secondMaterialTypeId: Int
-    secondMaterialTypeQuantity: Float
-    thirdMaterialTypeId: Int
-    thirdMaterialTypeQuantity: Float
-    fourthMaterialTypeId: Int
-    fourthMaterialTypeQuantity: Float
-    fifthMaterialTypeId: Int
-    fifthMaterialTypeQuantity: Float
     size: ProductSize
     weightUnit: WeightUnit
   }
@@ -1137,16 +1343,6 @@ export const typeDefs = gql`
     productCategoryName: String
     keywords: [String!]
     averageWeight: Float
-    firstMaterialTypeId: Int
-    firstMaterialTypeQuantity: Float
-    secondMaterialTypeId: Int
-    secondMaterialTypeQuantity: Float
-    thirdMaterialTypeId: Int
-    thirdMaterialTypeQuantity: Float
-    fourthMaterialTypeId: Int
-    fourthMaterialTypeQuantity: Float
-    fifthMaterialTypeId: Int
-    fifthMaterialTypeQuantity: Float
     size: ProductSize
     weightUnit: WeightUnit
   }
@@ -1196,6 +1392,183 @@ export const typeDefs = gql`
     message3: String
   }
 
+  # Store Input Types
+  input CreateStoreCategoryInput {
+    category: String!
+  }
+
+  input UpdateStoreCategoryInput {
+    category: String
+  }
+
+  input CreateStoreSubCategoryInput {
+    subCategory: String!
+    storeCategoryId: Int!
+  }
+
+  input UpdateStoreSubCategoryInput {
+    subCategory: String
+    storeCategoryId: Int
+  }
+
+  input CreateStoreProductInput {
+    name: String!
+    description: String!
+    stock: Int!
+    barcode: String
+    sku: String
+    price: Int!
+    hasOffer: Boolean
+    offerPrice: Int
+    images: [String!]!
+    badges: [Badge!]
+    brand: String
+    color: String
+    materialComposition: String
+    recycledContent: Float
+    subcategoryId: Int!
+    sustainabilityScore: Int
+    carbonFootprint: Float
+  }
+
+  input UpdateStoreProductInput {
+    name: String
+    description: String
+    stock: Int
+    barcode: String
+    sku: String
+    price: Int
+    hasOffer: Boolean
+    offerPrice: Int
+    images: [String!]
+    isActive: Boolean
+    badges: [Badge!]
+    brand: String
+    color: String
+    materialComposition: String
+    recycledContent: Float
+    subcategoryId: Int
+    sustainabilityScore: Int
+    carbonFootprint: Float
+  }
+
+  input CreateStoreProductMaterialInput {
+    storeProductId: Int!
+    materialTypeId: Int!
+    quantity: Float!
+    unit: String
+    isPrimary: Boolean
+    sourceMaterial: String
+    isRecycled: Boolean
+    recycledPercentage: Float
+    supplierVerified: Boolean
+  }
+
+  input UpdateStoreProductMaterialInput {
+    quantity: Float
+    unit: String
+    isPrimary: Boolean
+    sourceMaterial: String
+    isRecycled: Boolean
+    recycledPercentage: Float
+    supplierVerified: Boolean
+  }
+
+  # Service Input Types (Updates)
+  input CreateServiceSubCategoryInput {
+    subCategory: String!
+    serviceCategoryId: Int!
+  }
+
+  input UpdateServiceSubCategoryInput {
+    subCategory: String
+    serviceCategoryId: Int
+  }
+
+  input UpdateServiceCategoryInput {
+    category: String
+    isActive: Boolean
+  }
+
+  # Community Input Types (Updates)
+  input CreateCommunityCategoryInput {
+    category: String!
+  }
+
+  input UpdateCommunityCategoryInput {
+    category: String
+  }
+
+  input CreateCommunitySubCategoryInput {
+    subCategory: String!
+    communityCategoryId: Int!
+  }
+
+  input UpdateCommunitySubCategoryInput {
+    subCategory: String
+    communityCategoryId: Int
+  }
+
+  # Country Config Input Types
+  input CreateCountryConfigInput {
+    countryId: Int!
+    countryCode: String!
+    currencyCode: String!
+    currencySymbol: String!
+    taxIdLabel: String!
+    taxIdFormat: String
+    defaultTimezone: String!
+    defaultLocale: String!
+    isActive: Boolean
+    phonePrefix: String!
+    availablePaymentProviders: JSON!
+  }
+
+  input UpdateCountryConfigInput {
+    countryCode: String
+    currencyCode: String
+    currencySymbol: String
+    taxIdLabel: String
+    taxIdFormat: String
+    defaultTimezone: String
+    defaultLocale: String
+    isActive: Boolean
+    phonePrefix: String
+    availablePaymentProviders: JSON
+  }
+
+  # Product Category Material Input Types
+  input CreateProductCategoryMaterialInput {
+    productCategoryId: Int!
+    materialTypeId: Int!
+    quantity: Float!
+    unit: String
+    isPrimary: Boolean
+  }
+
+  input UpdateProductCategoryMaterialInput {
+    quantity: Float
+    unit: String
+    isPrimary: Boolean
+  }
+
+  # Seller Level Input Types
+  input CreateSellerLevelInput {
+    levelName: String!
+    minPoints: Int!
+    maxPoints: Int
+    benefits: JSON
+    badgeIcon: String
+  }
+
+  input UpdateSellerLevelInput {
+    levelName: String
+    minPoints: Int
+    maxPoints: Int
+    benefits: JSON
+    badgeIcon: String
+  }
+
   # Location Input Types
   input CreateCountryInput {
     country: String!
@@ -1233,6 +1606,40 @@ export const typeDefs = gql`
   input UpdateCountyInput {
     county: String
     cityId: Int
+  }
+
+  # Bulk Import Input Types
+  input BulkCountryInput {
+    country: String!
+  }
+
+  input BulkRegionInput {
+    region: String!
+    countryId: Int!
+  }
+
+  input BulkCityInput {
+    city: String!
+    regionId: Int!
+  }
+
+  input BulkCountyInput {
+    county: String!
+    cityId: Int!
+  }
+
+  # Bulk Import Response Types
+  type BulkImportResult {
+    success: Boolean!
+    created: Int!
+    failed: Int!
+    errors: [BulkImportError!]!
+  }
+
+  type BulkImportError {
+    row: Int!
+    data: JSON!
+    error: String!
   }
 
   # Community Post Input Types
@@ -1279,6 +1686,24 @@ export const typeDefs = gql`
     sku: String
   }
 
+  input CreateProductVariantInput {
+    name: String!
+    price: Int!
+    stock: Int!
+    color: String
+    size: String
+    storeProductId: Int!
+  }
+
+  input UpdateProductVariantInput {
+    name: String
+    price: Int
+    stock: Int
+    color: String
+    size: String
+    storeProductId: Int
+  }
+
   input CreateAdminInput {
     email: String!
     password: String!
@@ -1291,29 +1716,38 @@ export const typeDefs = gql`
 
   type Query {
     # PLATFORM ADMIN QUERIES
-    # Location queries
-    getCountries(limit: Int, offset: Int): [Country!]!
-    getRegions(limit: Int, offset: Int): [Region!]!
-    getRegionsByCountry(countryId: ID!): [Region!]!
-    getCities(limit: Int, offset: Int): [City!]!
-    getCitiesByRegion(regionId: ID!): [City!]!
-    getCounties(limit: Int, offset: Int): [County!]!
-    getCountiesByCity(cityId: ID!): [County!]!
+    # Location queries with pagination
+    getCountries(page: Int = 1, pageSize: Int = 10): CountriesConnection!
+    getRegions(page: Int = 1, pageSize: Int = 10): RegionsConnection!
+    getRegionsByCountry(countryId: ID!, page: Int = 1, pageSize: Int = 10): RegionsConnection!
+    getCities(page: Int = 1, pageSize: Int = 10): CitiesConnection!
+    getCitiesByRegion(regionId: ID!, page: Int = 1, pageSize: Int = 10): CitiesConnection!
+    getCounties(page: Int = 1, pageSize: Int = 10): CountiesConnection!
+    getCountiesByCity(cityId: ID!, page: Int = 1, pageSize: Int = 10): CountiesConnection!
 
-    # Admin queries
-    getAdmins(adminType: AdminType, role: AdminRole, isActive: Boolean, limit: Int, offset: Int): [Admin!]!
+    # Bulk location exports (for CSV/XLSX generation)
+    exportAllCountries: [Country!]!
+    exportAllRegions: [Region!]!
+    exportAllCities: [City!]!
+    exportAllCounties: [County!]!
+    exportRegionsByCountry(countryId: ID!): [Region!]!
+    exportCitiesByRegion(regionId: ID!): [City!]!
+    exportCountiesByCity(cityId: ID!): [County!]!
+
+    # Admin queries with pagination
+    getAdmins(adminType: AdminType, role: AdminRole, isActive: Boolean, page: Int = 1, pageSize: Int = 10): AdminsConnection!
     getAdmin(id: ID!): Admin
     getMyData: Admin
 
-    # Blog post queries
-    getBlogPosts(category: BlogCategory, isPublished: Boolean, limit: Int, offset: Int): [BlogPost!]!
+    # Blog post queries with pagination
+    getBlogPosts(category: BlogCategory, isPublished: Boolean, page: Int = 1, pageSize: Int = 10): BlogPostsConnection!
     getBlogPost(id: ID!): BlogPost
-    getBlogPostsByAuthor(authorId: ID!, limit: Int, offset: Int): [BlogPost!]!
+    getBlogPostsByAuthor(authorId: ID!, page: Int = 1, pageSize: Int = 10): BlogPostsConnection!
 
-    # Product queries
-    getProducts(sellerId: String, categoryId: Int, isActive: Boolean, limit: Int, offset: Int): [Product!]!
+    # Product queries with pagination
+    getProducts(sellerId: String, categoryId: Int, isActive: Boolean, page: Int = 1, pageSize: Int = 10): ProductsConnection!
     getProduct(id: ID!): Product
-    getProductsByCategory(categoryId: Int!, limit: Int, offset: Int): [Product!]!
+    getProductsByCategory(categoryId: Int!, page: Int = 1, pageSize: Int = 10): ProductsConnection!
 
     # Department queries
     getDepartments: [Department!]!
@@ -1323,23 +1757,60 @@ export const typeDefs = gql`
     getProductCategories(departmentCategoryId: Int): [ProductCategory!]!
     getProductCategory(id: ID!): ProductCategory
 
-    # Material Impact queries
-    getMaterialImpactEstimates(limit: Int, offset: Int): [MaterialImpactEstimate!]!
+    # Material Impact queries with pagination
+    getMaterialImpactEstimates(page: Int = 1, pageSize: Int = 10): MaterialImpactEstimatesConnection!
     getMaterialImpactEstimate(id: ID!): MaterialImpactEstimate
-    getCo2ImpactMessages(limit: Int, offset: Int): [Co2ImpactMessage!]!
+    getCo2ImpactMessages(page: Int = 1, pageSize: Int = 10): Co2ImpactMessagesConnection!
     getCo2ImpactMessage(id: ID!): Co2ImpactMessage
-    getWaterImpactMessages(limit: Int, offset: Int): [WaterImpactMessage!]!
+    getWaterImpactMessages(page: Int = 1, pageSize: Int = 10): WaterImpactMessagesConnection!
     getWaterImpactMessage(id: ID!): WaterImpactMessage
 
-    # Community queries
-    getCommunityPosts(sellerId: String, limit: Int, offset: Int): [CommunityPost!]!
+    # Community queries with pagination
+    getCommunityPosts(sellerId: String, page: Int = 1, pageSize: Int = 10): CommunityPostsConnection!
     getCommunityPost(id: ID!): CommunityPost
-    getCommunityComments(communityPostId: Int!, limit: Int, offset: Int): [CommunityComment!]!
+    getCommunityComments(communityPostId: Int!, page: Int = 1, pageSize: Int = 10): CommunityCommentsConnection!
     getCommunityComment(id: ID!): CommunityComment
 
-    createAdmin(input: CreateAdminInput!): Admin
+    # Store queries with pagination
+    getStoreCategories: [StoreCategory!]!
+    getStoreCategory(id: ID!): StoreCategory
+    getStoreSubCategories(storeCategoryId: Int): [StoreSubCategory!]!
+    getStoreSubCategory(id: ID!): StoreSubCategory
+    getStoreProducts(subcategoryId: Int, sellerId: String, isActive: Boolean, page: Int = 1, pageSize: Int = 10): StoreProductsConnection!
+    getStoreProduct(id: ID!): StoreProduct
+    getStoreProductMaterials(storeProductId: Int!, page: Int = 1, pageSize: Int = 10): StoreProductMaterialsConnection!
+    getStoreProductMaterial(id: ID!): StoreProductMaterial
 
-    # BUSINESS ADMIN QUERIES
+    # Service category queries
+    getServiceCategories: [ServiceCategory!]!
+    getServiceCategory(id: ID!): ServiceCategory
+    getServiceSubCategories(serviceCategoryId: Int): [ServiceSubCategory!]!
+    getServiceSubCategory(id: ID!): ServiceSubCategory
+
+    # Community category queries
+    getCommunityCategories: [CommunityCategory!]!
+    getCommunityCategory(id: ID!): CommunityCategory
+    getCommunitySubCategories(communityCategoryId: Int): [CommunitySubCategory!]!
+    getCommunitySubCategory(id: ID!): CommunitySubCategory
+
+    # Country config queries with pagination
+    getCountryConfigs(isActive: Boolean, page: Int = 1, pageSize: Int = 10): CountryConfigsConnection!
+    getCountryConfig(id: ID!): CountryConfig
+    getCountryConfigByCode(countryCode: String!): CountryConfig
+
+    # Product category material queries with pagination
+    getProductCategoryMaterials(
+      productCategoryId: Int
+      materialTypeId: Int
+      isPrimary: Boolean
+      page: Int = 1
+      pageSize: Int = 10
+    ): ProductCategoryMaterialsConnection!
+    getProductCategoryMaterial(id: ID!): ProductCategoryMaterial
+
+    # Seller level queries
+    getSellerLevels(page: Int = 1, pageSize: Int = 10): SellerLevelsConnection!
+    getSellerLevel(id: ID!): SellerLevel
   }
 
   type Mutation {
@@ -1413,6 +1884,12 @@ export const typeDefs = gql`
     updateCounty(id: ID!, input: UpdateCountyInput!): County!
     deleteCounty(id: ID!): Boolean!
 
+    # Bulk location imports
+    bulkImportCountries(countries: [BulkCountryInput!]!): BulkImportResult!
+    bulkImportRegions(regions: [BulkRegionInput!]!): BulkImportResult!
+    bulkImportCities(cities: [BulkCityInput!]!): BulkImportResult!
+    bulkImportCounties(counties: [BulkCountyInput!]!): BulkImportResult!
+
     # Community post management
     createCommunityPost(input: CreateCommunityPostInput!): CommunityPost!
     updateCommunityPost(id: ID!, input: UpdateCommunityPostInput!): CommunityPost!
@@ -1422,5 +1899,58 @@ export const typeDefs = gql`
     createCommunityComment(input: CreateCommunityCommentInput!): CommunityComment!
     updateCommunityComment(id: ID!, input: UpdateCommunityCommentInput!): CommunityComment!
     deleteCommunityComment(id: ID!): Boolean!
+
+    # Store management
+    createStoreCategory(input: CreateStoreCategoryInput!): StoreCategory!
+    updateStoreCategory(id: ID!, input: UpdateStoreCategoryInput!): StoreCategory!
+    deleteStoreCategory(id: ID!): Boolean!
+
+    createStoreSubCategory(input: CreateStoreSubCategoryInput!): StoreSubCategory!
+    updateStoreSubCategory(id: ID!, input: UpdateStoreSubCategoryInput!): StoreSubCategory!
+    deleteStoreSubCategory(id: ID!): Boolean!
+
+    createStoreProduct(input: CreateStoreProductInput!): StoreProduct!
+    updateStoreProduct(id: ID!, input: UpdateStoreProductInput!): StoreProduct!
+    deleteStoreProduct(id: ID!): Boolean!
+
+    createStoreProductMaterial(input: CreateStoreProductMaterialInput!): StoreProductMaterial!
+    updateStoreProductMaterial(id: ID!, input: UpdateStoreProductMaterialInput!): StoreProductMaterial!
+    deleteStoreProductMaterial(id: ID!): Boolean!
+
+    # Service category management
+    createServiceSubCategory(input: CreateServiceSubCategoryInput!): ServiceSubCategory!
+    updateServiceSubCategory(id: ID!, input: UpdateServiceSubCategoryInput!): ServiceSubCategory!
+    deleteServiceSubCategory(id: ID!): Boolean!
+
+    updateServiceCategory(id: ID!, input: UpdateServiceCategoryInput!): ServiceCategory!
+
+    # Community category management
+    createCommunityCategory(input: CreateCommunityCategoryInput!): CommunityCategory!
+    updateCommunityCategory(id: ID!, input: UpdateCommunityCategoryInput!): CommunityCategory!
+    deleteCommunityCategory(id: ID!): Boolean!
+
+    createCommunitySubCategory(input: CreateCommunitySubCategoryInput!): CommunitySubCategory!
+    updateCommunitySubCategory(id: ID!, input: UpdateCommunitySubCategoryInput!): CommunitySubCategory!
+    deleteCommunitySubCategory(id: ID!): Boolean!
+
+    # Country config management
+    createCountryConfig(input: CreateCountryConfigInput!): CountryConfig!
+    updateCountryConfig(id: ID!, input: UpdateCountryConfigInput!): CountryConfig!
+    deleteCountryConfig(id: ID!): Boolean!
+
+    # Product category material management
+    createProductCategoryMaterial(input: CreateProductCategoryMaterialInput!): ProductCategoryMaterial!
+    updateProductCategoryMaterial(id: ID!, input: UpdateProductCategoryMaterialInput!): ProductCategoryMaterial!
+    deleteProductCategoryMaterial(id: ID!): Boolean!
+
+    # Seller level management
+    createSellerLevel(input: CreateSellerLevelInput!): SellerLevel!
+    updateSellerLevel(id: ID!, input: UpdateSellerLevelInput!): SellerLevel!
+    deleteSellerLevel(id: ID!): Boolean!
+
+    # Product variant management
+    createProductVariant(input: CreateProductVariantInput!): ProductVariant!
+    updateProductVariant(id: ID!, input: UpdateProductVariantInput!): ProductVariant!
+    deleteProductVariant(id: ID!): Boolean!
   }
 `;

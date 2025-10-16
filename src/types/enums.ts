@@ -45,6 +45,8 @@ export type ContactMethod = "EMAIL" | "WHATSAPP" | "PHONE" | "INSTAGRAM" | "FACE
 // Business Related Enums
 export type BusinessType = "RETAIL" | "SERVICES" | "MIXED";
 export type BusinessFormalizationStatus = "NOT_REQUIRED" | "PENDING" | "IN_PROGRESS" | "FORMALIZED";
+export type BusinessSubscriptionPlan = "FREEMIUM" | "STARTUP" | "BASIC" | "ADVANCED" | "EXPERT";
+export type PersonSubscriptionPlan = "FREEMIUM" | "BASIC" | "ADVANCED";
 
 // Product Related Enums
 export type Badge =
@@ -83,16 +85,24 @@ export type WeightUnit = "KG" | "LB" | "OZ" | "G";
 export type ProductSize = "XS" | "S" | "M" | "L" | "XL";
 
 // Transaction and Order Related Enums
-export type TransactionKind = "PURCHASE" | "EXCHANGE" | "GIFT" | "REFERRAL" | "BONUS";
+export type TransactionKind =
+  | "PURCHASE"
+  | "SELL"
+  | "STOREPURCHASE"
+  | "EXCHANGE"
+  | "RECYCLE"
+  | "REPAIR"
+  | "ATTENDTOWORKSHOP"
+  | "ATTENDTOEVENT";
 export type ShippingStage = "PREPARING" | "SHIPPED" | "DELIVERED" | "RETURNED" | "CANCELED";
 export type ExchangeStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "COMPLETED" | "CANCELLED";
 
 // Payment Related Enums
 export type PaymentStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED" | "PARTIALLY_REFUNDED" | "EXPIRED";
-
 export type RefundStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
 export type PaymentEnvironment = "SANDBOX" | "PRODUCTION";
 export type ChileanPaymentProvider = "KHIPU" | "WEBPAY";
+export type PaymentType = "ORDER" | "QUOTATION";
 
 // Service Related Enums
 export type ServicePricing = "FIXED" | "QUOTATION" | "HOURLY" | "PACKAGE";

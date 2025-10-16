@@ -1,10 +1,19 @@
-import { type ShippingStage, type PaymentStatus, type RefundStatus, type ChileanPaymentProvider, type PaymentEnvironment } from "./enums";
+import {
+  type ShippingStage,
+  type PaymentStatus,
+  type RefundStatus,
+  type ChileanPaymentProvider,
+  type PaymentEnvironment,
+  type PaymentType,
+} from "./enums";
 
 export type Order = {
   id: number;
   sellerId: string;
   createdAt: Date;
   shippingStatusId: number;
+  updatedAt: Date;
+  version: number;
 };
 
 export type OrderItem = {
@@ -12,6 +21,7 @@ export type OrderItem = {
   orderId: number;
   productId: number;
   quantity: number;
+  createdAt: Date;
 };
 
 export type ShippingStatus = {
@@ -41,6 +51,7 @@ export type Payment = {
   processedAt?: Date | null;
   refundedAt?: Date | null;
   chileanConfigId: number;
+  paymentType: PaymentType;
 };
 
 export type PaymentRefund = {

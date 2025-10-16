@@ -7,6 +7,8 @@ import {
   type AdminType,
   type BusinessType,
   type BusinessFormalizationStatus,
+  type BusinessSubscriptionPlan,
+  type PersonSubscriptionPlan,
 } from "./enums";
 
 // Admin Types
@@ -67,8 +69,11 @@ export type Seller = {
   preferredContactMethod?: ContactMethod | null;
   socialMediaLinks?: any | null;
   accountType?: AccountType | null;
-  points?: number | null;
+  points: number;
   sellerCategoryId?: number | null;
+  locale: string;
+  sellerLevelId?: number | null;
+  timezone: string;
 };
 
 export type SellerPreferences = {
@@ -139,6 +144,34 @@ export type SellerCategory = {
   categoryDiscountAmount: number;
   pointsThreshold: number;
   level: number;
+};
+
+export type SellerLevel = {
+  id: number;
+  levelName: string;
+  minPoints: number;
+  maxPoints?: number | null;
+  benefits?: any | null;
+  badgeIcon?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type CountryConfig = {
+  id: number;
+  countryId: number;
+  countryCode: string;
+  currencyCode: string;
+  currencySymbol: string;
+  taxIdLabel: string;
+  taxIdFormat?: string | null;
+  defaultTimezone: string;
+  defaultLocale: string;
+  isActive: boolean;
+  phonePrefix: string;
+  availablePaymentProviders: any;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 // Session Types

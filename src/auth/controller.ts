@@ -4,27 +4,11 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 import prisma from "../client/prisma";
 import { environment } from "../config/configs";
 
-// Types for cookie configuration
-type UserType = "admin" | "seller";
-
-interface CookieNames {
-  token: string;
-  refreshToken: string;
-}
-
-// Helper function to get cookie names based on user type
-const getCookieNames = (userType: UserType): CookieNames => {
-  if (userType === "admin") {
-    return {
-      token: "x-o-token",
-      refreshToken: "x-o-refresh-token",
-    };
-  }
-  return {
-    token: "token",
-    refreshToken: "refreshToken",
-  };
-};
+// Cookie names for admin authentication
+const ADMIN_COOKIE_NAMES = {
+  token: "x-o-token",
+  refreshToken: "x-o-refresh-token",
+} as const;
 
 // Helper function to generate tokens
 const generateTokens = (userId: string) => {
@@ -42,28 +26,22 @@ const generateTokens = (userId: string) => {
 
 // Helper function to get cookie options
 const getCookieOptions = (maxAge: number) => ({
-  httpOnly: environment === "production" || environment === "qa",
+  httpOnly: true,
   secure: environment === "production" || environment === "qa",
   sameSite: "lax" as const,
   maxAge,
   domain: environment === "production" || environment === "qa" ? ".ekoru.cl" : undefined,
+  path: "/",
 });
 
 // Helper function to set authentication cookies
-const setAuthCookies = (res: Response, token: string, refreshToken: string, userType: UserType) => {
-  const cookieNames = getCookieNames(userType);
-
-  res.cookie(cookieNames.token, token, getCookieOptions(15 * 60 * 1000)); // 15 minutes
-  res.cookie(cookieNames.refreshToken, refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000)); // 7 days
+const setAuthCookies = (res: Response, token: string, refreshToken: string) => {
+  res.cookie(ADMIN_COOKIE_NAMES.token, token, getCookieOptions(15 * 60 * 1000)); // 15 minutes
+  res.cookie(ADMIN_COOKIE_NAMES.refreshToken, refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000)); // 7 days
 };
 
-// Generic login handler
-const handleLogin = async (
-  req: Request,
-  res: Response,
-  userType: UserType,
-  findUser: (email: string) => Promise<{ id: string; password: string } | null>,
-) => {
+// Admin login
+export const LoginAdmin = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -73,49 +51,38 @@ const handleLogin = async (
       return;
     }
 
-    console.log(`Login attempt for ${userType}:`, email);
+    console.log("Login attempt for admin:", email);
 
     const formattedEmail = email.toLowerCase();
 
-    const user = await findUser(formattedEmail);
-    if (!user) {
-      console.log(`User not found: ${formattedEmail}`);
+    const admin = await prisma.admin.findUnique({ where: { email: formattedEmail } });
+    if (!admin) {
+      console.log("Admin not found:", formattedEmail);
       res.status(400).json({ error: "No se encontró al usuario" });
       return;
     }
 
-    const valid = await compare(password, user.password);
+    const valid = await compare(password, admin.password);
     if (!valid) {
-      console.log(`Invalid password for: ${formattedEmail}`);
+      console.log("Invalid password for:", formattedEmail);
       res.status(400).json({ message: "Credenciales inválidas" });
       return;
     }
 
-    const { token, refreshToken } = generateTokens(user.id);
-    setAuthCookies(res, token, refreshToken, userType);
+    const { token, refreshToken } = generateTokens(admin.id);
+    setAuthCookies(res, token, refreshToken);
 
-    console.log(`Login successful for ${userType}: ${formattedEmail}`);
+    console.log("Login successful for admin:", formattedEmail);
     res.json({ token, message: "Inicio de sesión exitoso" });
   } catch (error) {
-    console.error(`Login error for ${userType}:`, error);
+    console.error("Login error for admin:", error);
     res.status(500).json({ error: "Error al procesar el inicio de sesión" });
   }
 };
 
-// Admin login
-export const LoginAdmin = async (req: Request, res: Response) => {
-  await handleLogin(req, res, "admin", (email) => prisma.admin.findUnique({ where: { email } }));
-};
-
-// Seller login
-export const Login = async (req: Request, res: Response) => {
-  await handleLogin(req, res, "seller", (email) => prisma.seller.findUnique({ where: { email } }));
-};
-
-// Generic refresh token handler
-const handleRefreshToken = (req: Request, res: Response, userType: UserType) => {
-  const cookieNames = getCookieNames(userType);
-  const refreshToken = req.cookies[cookieNames.refreshToken];
+// Refresh token for admins
+export const RefreshTokenAdmin = (req: Request, res: Response) => {
+  const refreshToken = req.cookies[ADMIN_COOKIE_NAMES.refreshToken];
 
   if (!refreshToken) {
     return res.status(401).json({ message: "No se pudo generar un nuevo token de acceso" });
@@ -125,19 +92,9 @@ const handleRefreshToken = (req: Request, res: Response, userType: UserType) => 
     const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET as string) as JwtPayload;
     const newToken = jwt.sign({ userId: payload.userId }, process.env.JWT_SECRET as string, { expiresIn: "15m" });
 
-    res.cookie(cookieNames.token, newToken, getCookieOptions(15 * 60 * 1000));
+    res.cookie(ADMIN_COOKIE_NAMES.token, newToken, getCookieOptions(15 * 60 * 1000));
     res.json({ token: newToken, success: true });
   } catch {
     res.status(401).json({ message: "Token de acceso inválido" });
   }
-};
-
-// Refresh token for sellers
-export const RefreshToken = (req: Request, res: Response) => {
-  handleRefreshToken(req, res, "seller");
-};
-
-// Refresh token for admins
-export const RefreshTokenAdmin = (req: Request, res: Response) => {
-  handleRefreshToken(req, res, "admin");
 };

@@ -4,6 +4,7 @@ export type Match = {
   receiverId: string;
   createdAt: Date;
   isMatched: boolean;
+  updatedAt: Date;
 };
 
 export type Chat = {

@@ -7,6 +7,12 @@ import { ImpactResolver } from "./impact";
 import { LocationResolver } from "./location";
 import { ProductsResolver } from "./products";
 import { SellerLevelResolver } from "./sellerLevel";
+import { SellerResolver } from "./seller";
+import { ServiceResolver } from "./service";
+import { OrderResolver } from "./order";
+import { StoreResolver } from "./store";
+import { PaymentResolver } from "./payment";
+import { NotificationResolver } from "./notification";
 
 export type CreateAdminInput = {
   email: string;
@@ -41,6 +47,18 @@ export const MainResolver = {
     ...CommunityResolver.Query,
     // Seller level queries
     ...SellerLevelResolver.Query,
+    // Seller queries
+    ...SellerResolver.Query,
+    // Service queries
+    ...ServiceResolver.Query,
+    // Order queries
+    ...OrderResolver.Query,
+    // Store queries
+    ...StoreResolver.Query,
+    // Payment queries
+    ...PaymentResolver.Query,
+    // Notification queries
+    ...NotificationResolver.Query,
   },
   Mutation: {
     // Admin management
@@ -59,6 +77,18 @@ export const MainResolver = {
     ...CommunityResolver.Mutation,
     // Seller level management
     ...SellerLevelResolver.Mutation,
+    // Seller management
+    ...SellerResolver.Mutation,
+    // Service management
+    ...ServiceResolver.Mutation,
+    // Order management
+    ...OrderResolver.Mutation,
+    // Store management
+    ...StoreResolver.Mutation,
+    // Payment management
+    ...PaymentResolver.Mutation,
+    // Notification management
+    ...NotificationResolver.Mutation,
   },
 
   // Field resolvers to map Prisma relation names to GraphQL schema

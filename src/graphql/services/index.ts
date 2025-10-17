@@ -6,6 +6,11 @@ import { SellerService } from "./controllers/sellers";
 import { BlogServices } from "./controllers/blog";
 import { CommunityServices } from "./controllers/community";
 import { SellerLevelServices } from "./controllers/sellerLevel";
+import { ServiceServices } from "./controllers/service";
+import { OrderServices } from "./controllers/order";
+import { StoreServices } from "./controllers/store";
+import { PaymentServices } from "./controllers/payment";
+import { NotificationServices } from "./controllers/notification";
 
 export const MainService = {
   // Location services
@@ -24,4 +29,14 @@ export const MainService = {
   ...CommunityServices,
   // Seller level services
   ...SellerLevelServices,
+  // Service services
+  ...ServiceServices,
+  // Order services
+  ...OrderServices,
+  // Store services
+  ...StoreServices,
+  // Payment services
+  ...PaymentServices,
+  // Notification services
+  ...NotificationServices,
 };

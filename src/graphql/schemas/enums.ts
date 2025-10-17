@@ -1,0 +1,277 @@
+import gql from "graphql-tag";
+
+export const enumsTypeDefs = gql`
+  enum AdminRole {
+    SUPER_ADMIN
+    MODERATOR
+    CONTENT_MANAGER
+    SUPPORT
+    BUSINESS_OWNER
+    BUSINESS_MANAGER
+    BUSINESS_ANALYST
+    BUSINESS_SUPPORT
+  }
+
+  enum AdminPermission {
+    MANAGE_PRODUCTS
+    APPROVE_PRODUCTS
+    DELETE_PRODUCTS
+    WRITE_BLOG
+    PUBLISH_BLOG
+    DELETE_BLOG
+    MODERATE_CONTENT
+    MANAGE_USERS
+    BAN_USERS
+    VIEW_USER_DATA
+    MANAGE_ORDERS
+    PROCESS_REFUNDS
+    VIEW_TRANSACTIONS
+    VIEW_ANALYTICS
+    EXPORT_DATA
+    MANAGE_ADMINS
+    MANAGE_CATEGORIES
+    MANAGE_SETTINGS
+    VIEW_SYSTEM_LOGS
+    MANAGE_BUSINESS_PROFILE
+    MANAGE_BUSINESS_TEAM
+    VIEW_BUSINESS_ANALYTICS
+    MANAGE_BUSINESS_PRODUCTS
+    MANAGE_BUSINESS_ORDERS
+  }
+
+  enum AdminType {
+    PLATFORM
+    BUSINESS
+  }
+
+  # Account and User Related Enums
+  enum AccountType {
+    FREE
+    PLUS
+    PREMIUM
+  }
+
+  enum SellerType {
+    PERSON
+    STARTUP
+    COMPANY
+  }
+
+  enum ContactMethod {
+    EMAIL
+    WHATSAPP
+    PHONE
+    INSTAGRAM
+    FACEBOOK
+    WEBSITE
+    TIKTOK
+  }
+
+  # Business Related Enums
+  enum BusinessType {
+    RETAIL
+    SERVICES
+    MIXED
+  }
+
+  enum BusinessFormalizationStatus {
+    NOT_REQUIRED
+    PENDING
+    IN_PROGRESS
+    FORMALIZED
+  }
+
+  enum BlogCategory {
+    RECYCLING
+    POLLUTION
+    SUSTAINABILITY
+    CIRCULAR_ECONOMY
+    USED_PRODUCTS
+    REUSE
+    ENVIRONMENT
+    UPCYCLING
+    RESPONSIBLE_CONSUMPTION
+    ECO_TIPS
+    ENVIRONMENTAL_IMPACT
+    SUSTAINABLE_LIVING
+    OTHER
+    SECURITY
+  }
+
+  enum ProductCondition {
+    NEW
+    OPEN_BOX
+    LIKE_NEW
+    FAIR
+    POOR
+    FOR_PARTS
+    REFURBISHED
+  }
+
+  enum ExchangeStatus {
+    PENDING
+    ACCEPTED
+    DECLINED
+    COMPLETED
+    CANCELLED
+  }
+
+  enum TransactionKind {
+    PURCHASE
+    EXCHANGE
+    GIFT
+    REFERRAL
+    BONUS
+  }
+
+  enum ShippingStage {
+    PREPARING
+    SHIPPED
+    DELIVERED
+    RETURNED
+    CANCELED
+  }
+
+  enum ServicePricing {
+    FIXED
+    QUOTATION
+    HOURLY
+    PACKAGE
+  }
+
+  enum QuotationStatus {
+    PENDING
+    ACCEPTED
+    DECLINED
+    COMPLETED
+    CANCELLED
+    EXPIRED
+  }
+
+  enum NotificationType {
+    ORDER_RECEIVED
+    ORDER_CONFIRMED
+    ORDER_SHIPPED
+    ORDER_DELIVERED
+    ORDER_CANCELLED
+    QUOTATION_REQUEST
+    QUOTATION_RECEIVED
+    QUOTATION_ACCEPTED
+    QUOTATION_DECLINED
+    EXCHANGE_PROPOSAL
+    EXCHANGE_ACCEPTED
+    EXCHANGE_DECLINED
+    EXCHANGE_COMPLETED
+    PAYMENT_RECEIVED
+    PAYMENT_FAILED
+    PAYMENT_REFUNDED
+    REVIEW_RECEIVED
+    MESSAGE_RECEIVED
+    PRODUCT_LIKED
+    PRODUCT_COMMENTED
+    SYSTEM_ANNOUNCEMENT
+    ACCOUNT_VERIFICATION
+    PROFILE_UPDATED
+  }
+
+  enum NotificationPriority {
+    LOW
+    MEDIUM
+    HIGH
+    URGENT
+  }
+
+  enum PaymentStatus {
+    PENDING
+    PROCESSING
+    COMPLETED
+    FAILED
+    CANCELLED
+    REFUNDED
+    PARTIALLY_REFUNDED
+    EXPIRED
+  }
+
+  enum RefundStatus {
+    PENDING
+    PROCESSING
+    COMPLETED
+    FAILED
+    CANCELLED
+  }
+
+  enum PaymentEnvironment {
+    SANDBOX
+    PRODUCTION
+  }
+
+  enum ChileanPaymentProvider {
+    KHIPU
+    WEBPAY
+  }
+
+  enum PaymentType {
+    ORDER
+    QUOTATION
+  }
+
+  enum BusinessSubscriptionPlan {
+    FREEMIUM
+    STARTUP
+    BASIC
+    ADVANCED
+    EXPERT
+  }
+
+  enum PersonSubscriptionPlan {
+    FREEMIUM
+    BASIC
+    ADVANCED
+  }
+
+  enum Badge {
+    POPULAR
+    DISCOUNTED
+    WOMAN_OWNED
+    BEST_SELLER
+    TOP_RATED
+    COMMUNITY_FAVORITE
+    LIMITED_TIME_OFFER
+    FLASH_SALE
+    BEST_VALUE
+    HANDMADE
+    SUSTAINABLE
+    SUPPORTS_CAUSE
+    FAMILY_BUSINESS
+    CHARITY_SUPPORT
+    LIMITED_STOCK
+    SEASONAL
+    FREE_SHIPPING
+    FOR_REPAIR
+    REFURBISHED
+    EXCHANGEABLE
+    LAST_PRICE
+    FOR_GIFT
+    OPEN_TO_OFFERS
+    OPEN_BOX
+    CRUELTY_FREE
+    DELIVERED_TO_HOME
+    IN_HOUSE_PICKUP
+    IN_MID_POINT_PICKUP
+  }
+
+  enum ProductSize {
+    XS
+    S
+    M
+    L
+    XL
+  }
+
+  enum WeightUnit {
+    KG
+    LB
+    OZ
+    G
+  }
+`;

@@ -1,5 +1,5 @@
 import { Context } from "../../types";
-import { SellerLevelService } from "../services/controllers/sellerLevel";
+import { MainService } from "../services";
 import { PaginationInput } from "./main";
 
 export type SellerLevelInput = {
@@ -12,17 +12,15 @@ export type SellerLevelInput = {
 
 export const SellerLevelResolver = {
   Query: {
-    getSellerLevels: (_parent: unknown, _args: PaginationInput, context: Context) =>
-      SellerLevelService.getSellerLevels({ ..._args, ...context }),
-    getSellerLevel: (_parent: unknown, _args: { id: number }, context: Context) =>
-      SellerLevelService.getSellerLevel({ ..._args, ...context }),
+    getSellerLevels: (_parent: unknown, _args: PaginationInput, context: Context) => MainService.getSellerLevels({ ..._args, ...context }),
+    getSellerLevel: (_parent: unknown, _args: { id: number }, context: Context) => MainService.getSellerLevel({ ..._args, ...context }),
   },
   Mutation: {
     createSellerLevel: (_parent: unknown, _args: { input: SellerLevelInput }, context: Context) =>
-      SellerLevelService.createSellerLevel({ ..._args, ...context }),
+      MainService.createSellerLevel({ ..._args, ...context }),
     updateSellerLevel: (_parent: unknown, _args: { id: number; input: SellerLevelInput }, context: Context) =>
-      SellerLevelService.updateSellerLevel({ ..._args, ...context }),
+      MainService.updateSellerLevel({ ..._args, ...context }),
     deleteSellerLevel: (_parent: unknown, _args: { id: number }, context: Context) =>
-      SellerLevelService.deleteSellerLevel({ ..._args, ...context }),
+      MainService.deleteSellerLevel({ ..._args, ...context }),
   },
 };

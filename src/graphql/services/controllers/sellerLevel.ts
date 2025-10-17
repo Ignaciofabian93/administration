@@ -4,7 +4,7 @@ import { Context, PaginationInput } from "../../../types";
 import { calculatePrismaParams, createPaginatedResponse } from "../../../utils/pagination";
 import { SellerLevelInput } from "../../resolvers/sellerLevel";
 
-export const SellerLevelService = {
+export const SellerLevelServices = {
   getSellerLevels: async ({ adminId, page = 1, pageSize = 10 }: PaginationInput & Context) => {
     try {
       if (!adminId) throw new ErrorService.UnAuthorizedError("No autorizado");

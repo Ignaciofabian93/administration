@@ -3,6 +3,7 @@ import http from "http";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import auth from "./auth/route";
+import helmet from "helmet";
 import { ApolloServer } from "@apollo/server";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
@@ -37,6 +38,7 @@ const allowedOrigins = [
 ];
 
 // Global CORS middleware for all routes
+app.use(helmet());
 app.use(
   cors<cors.CorsRequest>({
     origin: (origin, callback) => {
@@ -70,11 +72,6 @@ app.use(
     context: async ({ req }) => createContext({ req }),
   }),
 );
-
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", service: "administration" });
-});
 
 const PORT = process.env.PORT || 4500;
 

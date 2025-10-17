@@ -5,8 +5,9 @@ import { ProductServices } from "./controllers/products";
 import { SellerService } from "./controllers/sellers";
 import { BlogServices } from "./controllers/blog";
 import { CommunityServices } from "./controllers/community";
+import { SellerLevelServices } from "./controllers/sellerLevel";
 
-export const PlatformAdminService = {
+export const MainService = {
   // Location services
   ...LocationServices,
   // Product services
@@ -21,4 +22,6 @@ export const PlatformAdminService = {
   ...BlogServices,
   // Community services
   ...CommunityServices,
+  // Seller level services
+  ...SellerLevelServices,
 };

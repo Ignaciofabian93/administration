@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type Express } from "express";
 import http from "http";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -13,7 +13,7 @@ import { resolvers } from "./graphql/resolvers";
 import { createContext } from "./middleware/auth";
 import { type Context } from "./types/context";
 
-const app = express();
+const app: Express = express();
 const httpServer = http.createServer(app);
 
 const server = new ApolloServer<Context>({
@@ -65,13 +65,12 @@ app.use(cookieParser());
 
 app.use("/session", auth);
 
-// GraphQL endpoint - simplified CORS as global CORS is already applied
-app.use(
-  "/graphql",
-  expressMiddleware(server, {
-    context: async ({ req }) => createContext({ req }),
-  }),
-);
+// GraphQL endpoint
+const graphqlMiddleware = expressMiddleware(server, {
+  context: async ({ req }) => createContext({ req }),
+});
+
+app.use("/graphql", graphqlMiddleware);
 
 const PORT = process.env.PORT || 4500;
 

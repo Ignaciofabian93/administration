@@ -1,5 +1,6 @@
 import prisma from "../../../client/prisma";
 import { ErrorService } from "../../../errors/errors";
+import { Transaction } from "../../../types";
 import { calculatePagination } from "../../../utils/pagination";
 
 export const OrderServices = {

@@ -20,6 +20,9 @@ export const AdminService = {
     offset?: number;
   }) => {
     try {
+      if (!adminId) {
+        throw new ErrorService.UnAuthorizedError("No autorizado");
+      }
       const where: any = {};
       if (adminType) where.adminType = adminType;
       if (role) where.role = role;
@@ -37,8 +40,7 @@ export const AdminService = {
         },
       });
 
-      // Remove passwords from response
-      return admins.map(({ password, ...admin }) => admin);
+      return admins;
     } catch (error) {
       throw new ErrorService.InternalServerError("Error al intentar obtener administradores");
     }

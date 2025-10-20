@@ -174,7 +174,7 @@ export const OrderServices = {
           where: { sellerId },
           select: { id: true },
         });
-        const transactionIds = transactions.map((t) => t.id);
+        const transactionIds = transactions.map((t: { id: number }) => t.id);
         where.transactionId = { in: transactionIds };
       }
 

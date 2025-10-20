@@ -66,11 +66,12 @@ app.use(cookieParser());
 app.use("/session", auth);
 
 // GraphQL endpoint
-const graphqlMiddleware = expressMiddleware(server, {
-  context: async ({ req }) => createContext({ req }),
-});
-
-app.use("/graphql", graphqlMiddleware);
+app.use(
+  "/graphql",
+  expressMiddleware(server, {
+    context: async ({ req }) => createContext({ req }),
+  }) as unknown as express.RequestHandler,
+);
 
 const PORT = process.env.PORT || 4500;
 

@@ -1,12 +1,12 @@
 services:
-  user-service:
+  admin-api:
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
-    container_name: user-service
+    container_name: admin-api
     ports:
-      - "9001:9001"
+      - "4500:4500"
     networks:
       - ekoru-network
 

@@ -1,6 +1,7 @@
 import prisma from "../../../client/prisma";
 import { ErrorService } from "../../../errors/errors";
-import { type BlogCategory } from "../../../types";
+import { Context, PaginationInput, type BlogCategory } from "../../../types";
+import { calculatePrismaParams, createPaginatedResponse } from "../../../utils/pagination";
 
 export type CreateBlogPostInput = {
   title: string;
@@ -23,50 +24,33 @@ export const BlogServices = {
     adminId,
     category,
     isPublished,
-    limit,
-    offset,
+    page,
+    pageSize,
   }: {
-    adminId: string;
     category?: BlogCategory;
     isPublished?: boolean;
-    limit?: number;
-    offset?: number;
-  }) => {
+  } & PaginationInput &
+    Context) => {
     try {
-      if (!adminId) throw new ErrorService.UnAuthorizedError("No autorizado");
+      // if (!adminId) throw new ErrorService.UnAuthorizedError("No autorizado");
 
-      const where: any = {};
-      if (category) where.category = category;
-      if (isPublished !== undefined) where.isPublished = isPublished;
+      const { skip, take } = calculatePrismaParams(page, pageSize);
+
+      const totalCount = await prisma.blogPost.count();
 
       const blogPosts = await prisma.blogPost.findMany({
-        where,
-        take: limit,
-        skip: offset,
-        select: {
-          id: true,
-          title: true,
-          content: true,
-          category: true,
-          isPublished: true,
-          publishedAt: true,
-          createdAt: true,
-          updatedAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              lastName: true,
-              email: true,
-            },
-          },
+        take,
+        skip,
+        include: {
+          author: true,
         },
         orderBy: {
           createdAt: "desc",
         },
       });
+      console.log("blogPosts", blogPosts);
 
-      return blogPosts;
+      return createPaginatedResponse(blogPosts, totalCount, page, pageSize);
     } catch (error) {
       console.error("Error in getBlogPosts:", error);
       throw new ErrorService.InternalServerError("Error al intentar obtener los posts del blog");

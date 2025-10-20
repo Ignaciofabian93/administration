@@ -1,14 +1,11 @@
-import { BlogCategory } from "../../types";
+import { BlogCategory, Context } from "../../types";
 import { MainService } from "../services";
 import { PaginationInput } from "./main";
 
 export const BlogsResolver = {
   Query: {
-    getBlogPosts: (
-      _parent: unknown,
-      _args: { category?: BlogCategory; isPublished?: boolean } & PaginationInput,
-      context: { adminId: string },
-    ) => MainService.getBlogPosts({ adminId: context.adminId, ..._args }),
+    getBlogPosts: (_parent: unknown, _args: { category?: BlogCategory; isPublished?: boolean } & PaginationInput, context: Context) =>
+      MainService.getBlogPosts({ ..._args, ...context }),
 
     getBlogPost: (_parent: unknown, _args: { id: number }, context: { adminId: string }) =>
       MainService.getBlogPost({ adminId: context.adminId, ..._args }),

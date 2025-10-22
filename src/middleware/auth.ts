@@ -9,14 +9,30 @@ export const createContext = ({ req }: { req: any }): Context => {
   const authHeader = req.headers.authorization;
   let adminId: string | undefined = req.headers["x-admin-id"];
 
-  // Try to extract adminId from cookie token if not in headers
+  // Try to extract adminId from x-o-token cookie
   if (!adminId && req.cookies && req.cookies["x-o-token"]) {
     try {
       const decoded = jwt.verify(req.cookies["x-o-token"], process.env.JWT_SECRET as string) as JwtPayload;
-      adminId = decoded.userId;
+      console.log("📦 Decoded x-o-token:", decoded);
+
+      // Extract adminId from token (your controller.ts signs with 'adminId')
+      adminId = decoded.adminId;
       console.log("✅ Admin ID extracted from x-o-token cookie:", adminId);
     } catch (error) {
-      console.warn("❌ Failed to decode admin token from cookie:", error);
+      console.warn("❌ Failed to decode admin token from x-o-token cookie:", error);
+    }
+  }
+
+  // Try to extract adminId from x-o-refresh-token if not found
+  if (!adminId && req.cookies && req.cookies["x-o-refresh-token"]) {
+    try {
+      const decoded = jwt.verify(req.cookies["x-o-refresh-token"], process.env.JWT_REFRESH_SECRET as string) as JwtPayload;
+      console.log("📦 Decoded x-o-refresh-token:", decoded);
+
+      adminId = decoded.adminId;
+      console.log("✅ Admin ID extracted from x-o-refresh-token cookie:", adminId);
+    } catch (error) {
+      console.warn("❌ Failed to decode admin token from x-o-refresh-token cookie:", error);
     }
   }
 
@@ -25,7 +41,9 @@ export const createContext = ({ req }: { req: any }): Context => {
     try {
       const token = authHeader.replace("Bearer ", "");
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
-      adminId = decoded.userId;
+      console.log("📦 Decoded Authorization header:", decoded);
+
+      adminId = decoded.adminId;
       console.log("✅ Admin ID extracted from Authorization header");
     } catch (error) {
       console.warn("❌ Failed to decode token from Authorization header:", error);

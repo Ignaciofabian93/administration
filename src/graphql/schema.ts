@@ -1,4 +1,3 @@
-// Import all modular schema definitions
 import { baseTypeDefs } from "./schemas/base";
 import { enumsTypeDefs } from "./schemas/enums";
 import { adminTypeDefs } from "./schemas/admin";
@@ -18,14 +17,6 @@ import { impactTypeDefs } from "./schemas/impact";
 import { sellerLevelTypeDefs } from "./schemas/sellerLevel";
 import { storeTypeDefs } from "./schemas/store";
 
-/**
- * Combine all GraphQL type definitions
- *
- * Order matters:
- * 1. base - defines scalars, PageInfo, and root Query/Mutation types
- * 2. enums - defines all enum types used across schemas
- * 3. All domain schemas - extend Query and Mutation as needed
- */
 export const typeDefs = [
   baseTypeDefs,
   enumsTypeDefs,

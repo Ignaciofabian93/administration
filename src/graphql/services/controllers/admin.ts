@@ -33,10 +33,10 @@ export const AdminService = {
         take: limit,
         skip: offset,
         include: {
-          Region: true,
-          Country: true,
-          City: true,
-          County: true,
+          region: true,
+          country: true,
+          city: true,
+          county: true,
         },
       });
 
@@ -67,10 +67,10 @@ export const AdminService = {
       const admin = await prisma.admin.findUnique({
         where: { id: adminId },
         include: {
-          Region: true,
-          Country: true,
-          City: true,
-          County: true,
+          region: true,
+          country: true,
+          city: true,
+          county: true,
         },
       });
 

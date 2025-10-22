@@ -97,17 +97,16 @@ export const productTypeDefs = gql`
     id: ID!
     departmentName: String!
     departmentImage: String
-    departmentCategories: [DepartmentCategory]
+    departmentCategory: [DepartmentCategory]
   }
 
   # Product Input Types
-  input UpdateProductInput {
+  input CreateProductInput {
     name: String
     description: String
     price: Int
     hasOffer: Boolean
     offerPrice: Int
-    stock: Int
     brand: String
     color: String
     images: [String!]
@@ -117,11 +116,23 @@ export const productTypeDefs = gql`
     productCategoryId: Int
     condition: ProductCondition
     conditionDescription: String
-    sustainabilityScore: Int
-    materialComposition: String
-    recycledContent: Float
-    barcode: String
-    sku: String
+  }
+
+  input UpdateProductInput {
+    name: String
+    description: String
+    price: Int
+    hasOffer: Boolean
+    offerPrice: Int
+    brand: String
+    color: String
+    images: [String!]
+    interests: [String!]
+    isActive: Boolean
+    isExchangeable: Boolean
+    productCategoryId: Int
+    condition: ProductCondition
+    conditionDescription: String
   }
 
   input CreateProductVariantInput {
@@ -184,6 +195,7 @@ export const productTypeDefs = gql`
   }
 
   input UpdateDepartmentCategoryInput {
+    departmentId: Int
     departmentCategoryName: String
   }
 
@@ -197,6 +209,7 @@ export const productTypeDefs = gql`
   }
 
   input UpdateProductCategoryInput {
+    departmentCategoryId: Int
     productCategoryName: String
     keywords: [String!]
     averageWeight: Float
@@ -204,12 +217,65 @@ export const productTypeDefs = gql`
     weightUnit: WeightUnit
   }
 
+  type DepartmentConnection {
+    nodes: [Department!]!
+    pageInfo: PageInfo!
+  }
+
+  type DepartmentCategoryConnection {
+    nodes: [DepartmentCategory!]!
+    pageInfo: PageInfo!
+  }
+
+  type ProductCategoryConnection {
+    nodes: [ProductCategory!]!
+    pageInfo: PageInfo!
+  }
+
+  # Bulk Import Input Types
+  input BulkDepartmentInput {
+    departmentName: String!
+    departmentImage: String
+  }
+
+  input BulkDepartmentCategoryInput {
+    departmentCategoryName: String!
+    departmentId: Int!
+  }
+
+  input BulkProductCategoryInput {
+    productCategoryName: String!
+    departmentCategoryId: Int!
+    keywords: [String!]
+    averageWeight: Float
+    size: ProductSize
+    weightUnit: WeightUnit
+  }
+
+  input BulkProductInput {
+    name: String!
+    description: String!
+    price: Int!
+    hasOffer: Boolean
+    offerPrice: Int
+    brand: String!
+    color: String
+    images: [String!]
+    interests: [String!]
+    isActive: Boolean
+    isExchangeable: Boolean
+    productCategoryId: Int!
+    condition: ProductCondition
+    conditionDescription: String
+    sellerId: String!
+  }
+
   extend type Query {
-    getDepartments: [Department!]!
+    getDepartments(page: Int = 1, pageSize: Int = 10): DepartmentConnection!
     getDepartment(id: ID!): Department
-    getDepartmentCategories(departmentId: Int): [DepartmentCategory!]!
+    getDepartmentCategories(page: Int = 1, pageSize: Int = 10): DepartmentCategoryConnection!
     getDepartmentCategory(id: ID!): DepartmentCategory
-    getProductCategories(departmentCategoryId: Int): [ProductCategory!]!
+    getProductCategories(page: Int = 1, pageSize: Int = 10): ProductCategoryConnection!
     getProductCategory(id: ID!): ProductCategory
 
     # Product queries with pagination
@@ -245,6 +311,7 @@ export const productTypeDefs = gql`
     deleteProductCategory(id: ID!): Boolean!
 
     # Product management
+    createProduct(input: CreateProductInput!): Product!
     updateProduct(id: ID!, input: UpdateProductInput!): Product!
     deleteProduct(id: ID!): Boolean!
     approveProduct(id: ID!): Product!
@@ -259,5 +326,11 @@ export const productTypeDefs = gql`
     createProductVariant(input: CreateProductVariantInput!): ProductVariant!
     updateProductVariant(id: ID!, input: UpdateProductVariantInput!): ProductVariant!
     deleteProductVariant(id: ID!): Boolean!
+
+    # Bulk Import Operations
+    bulkImportDepartments(departments: [BulkDepartmentInput!]!): BulkImportResult!
+    bulkImportDepartmentCategories(categories: [BulkDepartmentCategoryInput!]!): BulkImportResult!
+    bulkImportProductCategories(categories: [BulkProductCategoryInput!]!): BulkImportResult!
+    bulkImportProducts(products: [BulkProductInput!]!): BulkImportResult!
   }
 `;
